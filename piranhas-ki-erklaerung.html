@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piranhas KI - Code Erklärt</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Outfit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-code: #1a1a25;
+            --accent-cyan: #00d4ff;
+            --accent-magenta: #ff00aa;
+            --accent-yellow: #ffd000;
+            --accent-green: #00ff88;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888aa;
+            --text-muted: #555566;
+            --border: #2a2a3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.7; }
+        .bg-grid {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+        header { text-align: center; padding: 4rem 0; position: relative; }
+        header::before {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 600px; height: 600px; background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%); pointer-events: none;
+        }
+        h1 { font-size: 3.5rem; font-weight: 700; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem; }
+        .subtitle { font-size: 1.2rem; color: var(--text-secondary); font-weight: 300; }
+        nav { position: sticky; top: 0; z-index: 100; background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 1rem 0; margin-bottom: 3rem; }
+        .nav-inner { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        .nav-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.9rem; transition: all 0.3s ease; }
+        .nav-btn:hover, .nav-btn.active { background: var(--accent-cyan); color: var(--bg-dark); border-color: var(--accent-cyan); }
+        section { display: none; animation: fadeIn 0.5s ease; }
+        section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { font-size: 2.2rem; margin-bottom: 2rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 1rem; }
+        h3 { font-size: 1.4rem; margin: 2rem 0 1rem; color: var(--accent-yellow); }
+        h4 { font-size: 1.1rem; margin: 1.5rem 0 0.8rem; color: var(--accent-green); }
+        p { margin-bottom: 1rem; color: var(--text-secondary); }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; position: relative; overflow: hidden; }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta)); }
+        .card-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); }
+        pre { background: var(--bg-code); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; margin: 1rem 0; position: relative; }
+        pre::before { content: attr(data-lang); position: absolute; top: 0.5rem; right: 0.8rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+        code { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; }
+        .kw { color: var(--accent-magenta); }
+        .ty { color: var(--accent-cyan); }
+        .fn { color: var(--accent-yellow); }
+        .str { color: var(--accent-green); }
+        .cm { color: var(--text-muted); font-style: italic; }
+        .num { color: #ff8844; }
+        .info-box { background: rgba(0, 212, 255, 0.1); border-left: 4px solid var(--accent-cyan); padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+        .info-box.warning { background: rgba(255, 208, 0, 0.1); border-color: var(--accent-yellow); }
+        .info-box.success { background: rgba(0, 255, 136, 0.1); border-color: var(--accent-green); }
+        .info-box strong { color: var(--text-primary); }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--accent-cyan); font-weight: 600; }
+        td { color: var(--text-secondary); }
+        td code { background: var(--bg-code); padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--accent-yellow); }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 1.5rem 0; }
+        .concept-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: transform 0.3s ease, border-color 0.3s ease; }
+        .concept-card:hover { transform: translateY(-4px); border-color: var(--accent-cyan); }
+        .concept-card h5 { color: var(--accent-cyan); font-size: 1.1rem; margin-bottom: 0.8rem; }
+        .algo-step { display: flex; gap: 1.5rem; margin: 1rem 0; align-items: flex-start; }
+        .step-num { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .step-content { flex: 1; }
+        .bit-demo { display: flex; gap: 0.3rem; margin: 1rem 0; justify-content: center; flex-wrap: wrap; }
+        .bit-group { display: flex; flex-direction: column; align-items: center; }
+        .bit { width: 36px; height: 36px; background: var(--bg-code); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.9rem; }
+        .bit.on { background: var(--accent-cyan); color: var(--bg-dark); }
+        .bit.val { background: var(--accent-magenta); color: white; }
+        .bit-label { font-size: 0.6rem; color: var(--text-muted); margin-top: 0.2rem; }
+        .tree-container { overflow-x: auto; padding: 2rem 0; }
+        .tree { display: flex; flex-direction: column; align-items: center; gap: 2rem; }
+        .tree-level { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .tree-node { background: var(--bg-code); border: 2px solid var(--border); border-radius: 8px; padding: 0.8rem 1.2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; text-align: center; }
+        .tree-node.max { border-color: var(--accent-cyan); }
+        .tree-node.min { border-color: var(--accent-magenta); }
+        .tree-node.pruned { opacity: 0.4; border-style: dashed; }
+        footer { text-align: center; padding: 4rem 0 2rem; color: var(--text-muted); font-size: 0.9rem; }
+        @media (max-width: 768px) { h1 { font-size: 2.2rem; } h2 { font-size: 1.6rem; } .container { padding: 1rem; } .card { padding: 1.5rem; } pre { padding: 1rem; } code { font-size: 0.75rem; } }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ul, ol { margin: 1rem 0 1rem 1.5rem; color: var(--text-secondary); }
+        li { margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<header>
+    <div class="container">
+        <h1>🐟 Piranhas KI</h1>
+        <p class="subtitle">Ein Cython-optimierter Game-Bot für die Software-Challenge — vollständig erklärt</p>
+    </div>
+</header>
+
+<nav>
+    <div class="nav-inner">
+        <button class="nav-btn active" data-section="overview">Überblick</button>
+        <button class="nav-btn" data-section="cython">Cython Basics</button>
+        <button class="nav-btn" data-section="board">Spielfeld</button>
+        <button class="nav-btn" data-section="zobrist">Zobrist Hashing</button>
+        <button class="nav-btn" data-section="evaluate">Bewertung</button>
+        <button class="nav-btn" data-section="search">Suchalgorithmus</button>
+        <button class="nav-btn" data-section="client">Client &amp; Setup</button>
+    </div>
+</nav>
+
+<main class="container">
+
+<!-- ==================== OVERVIEW ==================== -->
+<section id="overview" class="active">
+    <h2>🎯 Überblick</h2>
+    <div class="card">
+        <div class="card-title">Was ist das hier?</div>
+        <p>Dies ist ein <strong>Game-Bot</strong> für das Spiel "Piranhas" der Software-Challenge Germany. Der Bot verwendet <strong>Künstliche Intelligenz</strong> in Form eines Minimax-Algorithmus mit Alpha-Beta-Pruning, um den bestmöglichen Zug zu berechnen.</p>
+        <p>Der Code ist in <strong>Cython</strong> geschrieben — einer Mischung aus Python und C — um maximale Performance zu erreichen (10-100× schneller als reines Python).</p>
+    </div>
+
+    <h3>Architektur des Bots</h3>
+    <div class="concept-grid">
+        <div class="concept-card">
+            <h5>📋 board.pyx</h5>
+            <p>Spielfeld-Repräsentation, Zugvalidierung und Zuggenerierung. Speichert das 10×10-Brett als kompaktes Array.</p>
+        </div>
+        <div class="concept-card">
+            <h5>#️⃣ zobrist.pyx</h5>
+            <p>Zobrist-Hashing für schnelle Positionserkennung. Ermöglicht effiziente Transpositionstabellen.</p>
+        </div>
+        <div class="concept-card">
+            <h5>⚖️ evaluate.pyx</h5>
+            <p>Positionsbewertung mit Schwarm-Analyse. Berechnet, wie gut eine Stellung für ein Team ist.</p>
+        </div>
+        <div class="concept-card">
+            <h5>🔍 search.pyx</h5>
+            <p>Alpha-Beta-Suche mit Iterative Deepening. Das "Gehirn" des Bots, das Züge vorausberechnet.</p>
+        </div>
+        <div class="concept-card">
+            <h5>🎮 client_cython.py</h5>
+            <p>Verbindung zum Spielserver. Empfängt Spielstände und sendet berechnete Züge zurück.</p>
+        </div>
+        <div class="concept-card">
+            <h5>⚙️ setup.py</h5>
+            <p>Build-Konfiguration. Kompiliert Cython-Code zu schnellen C-Erweiterungen.</p>
+        </div>
+    </div>
+
+    <h3>Der Spielablauf</h3>
+    <div class="info-box">
+        <strong>Ablauf jedes Zuges:</strong>
+        <ol>
+            <li>Server sendet aktuellen <code>GameState</code></li>
+            <li><code>from_game_state()</code> konvertiert zu internem Board</li>
+            <li><code>iterative_deepening()</code> sucht den besten Zug</li>
+            <li>Bester Zug wird an Server zurückgesendet</li>
+        </ol>
+    </div>
+
+    <div class="info-box success">
+        <strong>💡 Kernkonzept:</strong> Der Bot denkt mehrere Züge voraus und bewertet alle möglichen Spielverläufe. Er wählt den Zug, der zum besten Ergebnis führt — auch wenn der Gegner optimal spielt.
+    </div>
+</section>
+
+<!-- ==================== CYTHON ==================== -->
+<section id="cython">
+    <h2>⚡ Cython Grundlagen</h2>
+
+    <div class="card">
+        <div class="card-title">Was ist Cython?</div>
+        <p>Cython ist eine <strong>Programmiersprache</strong>, die Python-Syntax mit C-Datentypen kombiniert. Der Cython-Compiler übersetzt den Code zu C, das dann zu nativen Maschinencode kompiliert wird.</p>
+        <p>Resultat: <strong>10-100× schneller</strong> als reines Python, aber fast genauso einfach zu schreiben.</p>
+    </div>
+
+    <h3>Compiler-Direktiven</h3>
+    <pre data-lang="cython"><code><span class="cm"># cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True</span></code></pre>
+    
+    <table>
+        <tr><th>Direktive</th><th>Bedeutung</th><th>Performance-Effekt</th></tr>
+        <tr><td><code>language_level=3</code></td><td>Python 3 Syntax verwenden</td><td>Kompatibilität</td></tr>
+        <tr><td><code>boundscheck=False</code></td><td>Keine Array-Grenzen prüfen</td><td>⚡ Schnellerer Array-Zugriff</td></tr>
+        <tr><td><code>wraparound=False</code></td><td>Keine negativen Indizes (wie arr[-1])</td><td>⚡ Schnellerer Array-Zugriff</td></tr>
+        <tr><td><code>cdivision=True</code></td><td>C-Division statt Python-Division</td><td>⚡ Schnellere Mathematik</td></tr>
+    </table>
+
+    <div class="info-box warning">
+        <strong>⚠️ Achtung:</strong> Diese Optimierungen sind unsicher! Bei <code>boundscheck=False</code> kann ein falscher Index zu Speicherfehlern führen. Nur verwenden, wenn der Code korrekt ist!
+    </div>
+
+    <h3>Cython Schlüsselwörter</h3>
+
+    <h4>Typdefinitionen</h4>
+    <pre data-lang="cython"><code><span class="kw">cimport</span> cython                    <span class="cm"># Import aus .pxd Dateien (nur Deklarationen)</span>
+<span class="kw">from</span> libc.string <span class="kw">cimport</span> memcpy   <span class="cm"># C-Standardbibliothek importieren</span>
+
+<span class="kw">ctypedef</span> <span class="ty">signed char</span> int8         <span class="cm"># Neuen Typ definieren (wie typedef in C)</span>
+<span class="kw">ctypedef</span> <span class="ty">unsigned long long</span> uint64
+
+<span class="kw">DEF</span> TEAM_ONE = <span class="num">1</span>                   <span class="cm"># Compile-Zeit Konstante (wird eingesetzt)</span>
+<span class="kw">DEF</span> BOARD_SIZE = <span class="num">100</span></code></pre>
+
+    <h4>Variablen-Deklaration</h4>
+    <pre data-lang="cython"><code><span class="kw">cdef</span> <span class="ty">int</span> x = <span class="num">0</span>                     <span class="cm"># C-Variable (nur in Cython sichtbar)</span>
+<span class="kw">cdef</span> <span class="ty">double</span> score = <span class="num">0.0</span>
+<span class="kw">cdef</span> <span class="ty">int</span>[<span class="num">100</span>] array              <span class="cm"># C-Array mit fester Größe</span>
+<span class="kw">cdef</span> <span class="ty">int</span>[<span class="num">8</span>][<span class="num">2</span>] matrix            <span class="cm"># 2D C-Array</span>
+
+<span class="kw">cdef</span> <span class="ty">bint</span> flag = <span class="kw">True</span>            <span class="cm"># Boolean (int, aber True/False)</span></code></pre>
+
+    <h4>Funktionstypen</h4>
+    <pre data-lang="cython"><code><span class="cm"># Nur aus Cython aufrufbar (schnellste Option)</span>
+<span class="kw">cdef</span> <span class="ty">int</span> <span class="fn">fast_function</span>(<span class="ty">int</span> x) <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+    <span class="kw">return</span> x * <span class="num">2</span>
+
+<span class="cm"># Aus Python UND Cython aufrufbar</span>
+<span class="kw">cpdef</span> <span class="ty">int</span> <span class="fn">hybrid_function</span>(<span class="ty">int</span> x):
+    <span class="kw">return</span> x * <span class="num">2</span>
+
+<span class="cm"># Normale Python-Funktion (in Cython geschrieben)</span>
+<span class="kw">def</span> <span class="fn">python_function</span>(x):
+    <span class="kw">return</span> x * <span class="num">2</span></code></pre>
+
+    <table>
+        <tr><th>Funktionstyp</th><th>Aufrufbar von</th><th>Geschwindigkeit</th></tr>
+        <tr><td><code>cdef</code></td><td>Nur Cython</td><td>⚡⚡⚡ Maximal</td></tr>
+        <tr><td><code>cpdef</code></td><td>Cython + Python</td><td>⚡⚡ Sehr schnell</td></tr>
+        <tr><td><code>def</code></td><td>Überall</td><td>⚡ Python-Speed</td></tr>
+    </table>
+
+    <h4>Spezielle Modifikatoren</h4>
+    <pre data-lang="cython"><code><span class="kw">cdef</span> <span class="ty">int</span> <span class="fn">func</span>() <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+    <span class="cm"># noexcept = wirft keine Exceptions (schneller)</span>
+    <span class="cm"># nogil = braucht kein Global Interpreter Lock</span>
+    <span class="cm">#         → kann parallel laufen!</span>
+    <span class="kw">return</span> <span class="num">42</span>
+
+<span class="kw">cdef</span> <span class="kw">inline</span> <span class="ty">int</span> <span class="fn">tiny_func</span>(<span class="ty">int</span> x):
+    <span class="cm"># inline = Code wird direkt eingesetzt statt aufgerufen</span>
+    <span class="kw">return</span> x + <span class="num">1</span></code></pre>
+
+    <h3>Klassen in Cython</h3>
+    <pre data-lang="cython"><code><span class="kw">cdef</span> <span class="kw">class</span> <span class="ty">CBoard</span>:
+    <span class="cm"># Attribute müssen in __cinit__ oder .pxd deklariert werden</span>
+    <span class="kw">cdef</span> <span class="ty">int8</span>[<span class="num">100</span>] fields    <span class="cm"># C-Array als Attribut</span>
+    <span class="kw">cdef</span> <span class="kw">public</span> <span class="ty">int</span> turn     <span class="cm"># public = aus Python zugreifbar</span>
+
+    <span class="kw">def</span> <span class="fn">__cinit__</span>(self):     <span class="cm"># C-Konstruktor (vor __init__)</span>
+        <span class="kw">cdef</span> <span class="ty">int</span> i
+        <span class="kw">for</span> i <span class="kw">in</span> range(<span class="num">100</span>):
+            self.fields[i] = <span class="num">0</span>
+
+    <span class="kw">cdef</span> <span class="ty">int8</span> <span class="fn">get_field</span>(self, <span class="ty">int</span> x, <span class="ty">int</span> y) <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+        <span class="kw">return</span> self.fields[x * <span class="num">10</span> + y]</code></pre>
+
+    <h3>.pxd Dateien (Deklarationen)</h3>
+    <p><code>.pxd</code>-Dateien sind wie C-Header-Dateien. Sie deklarieren, <em>was</em> existiert, ohne den Code zu zeigen:</p>
+    <pre data-lang="cython"><code><span class="cm"># board.pxd - nur Deklarationen</span>
+<span class="kw">ctypedef</span> <span class="ty">signed char</span> int8
+
+<span class="kw">cdef</span> <span class="kw">class</span> <span class="ty">CBoard</span>:
+    <span class="kw">cdef</span> <span class="ty">int8</span>[<span class="num">100</span>] fields
+    <span class="kw">cdef</span> <span class="kw">public</span> <span class="ty">int</span> turn
+    
+    <span class="kw">cdef</span> <span class="ty">int8</span> <span class="fn">get_field</span>(self, <span class="ty">int</span> x, <span class="ty">int</span> y) <span class="kw">noexcept</span> <span class="kw">nogil</span>
+    <span class="kw">cpdef</span> <span class="ty">CBoard</span> <span class="fn">copy</span>(self)</code></pre>
+
+    <div class="info-box success">
+        <strong>✅ Vorteil von .pxd:</strong> Andere Cython-Module können mit <code>cimport</code> auf die deklarierten Typen und Funktionen zugreifen, ohne den ganzen Code neu zu kompilieren.
+    </div>
+</section>
+
+<!-- ==================== BOARD ==================== -->
+<section id="board">
+    <h2>📋 Spielfeld (board.pyx)</h2>
+
+    <div class="card">
+        <div class="card-title">Bit-Packing: Speichereffiziente Felder</div>
+        <p>Jedes Spielfeld speichert zwei Informationen: das <strong>Team</strong> (0-3) und den <strong>Wert</strong> des Fisches (0-4). Statt zwei Variablen zu verwenden, werden beide in <strong>einem einzigen Byte</strong> kombiniert.</p>
+    </div>
+
+    <h3>Das Bit-Layout</h3>
+    <p style="text-align: center; margin-bottom: 0.5rem;">Ein <code>int8</code> (8 Bit) speichert Team UND Wert:</p>
+    <div class="bit-demo">
+        <div class="bit-group"><div class="bit">0</div><div class="bit-label">Bit 7</div></div>
+        <div class="bit-group"><div class="bit">0</div><div class="bit-label">Bit 6</div></div>
+        <div class="bit-group"><div class="bit">0</div><div class="bit-label">Bit 5</div></div>
+        <div class="bit-group"><div class="bit val">1</div><div class="bit-label">Bit 4</div></div>
+        <div class="bit-group"><div class="bit val">0</div><div class="bit-label">Bit 3</div></div>
+        <div class="bit-group"><div class="bit val">0</div><div class="bit-label">Bit 2</div></div>
+        <div class="bit-group"><div class="bit on">0</div><div class="bit-label">Bit 1</div></div>
+        <div class="bit-group"><div class="bit on">1</div><div class="bit-label">Bit 0</div></div>
+    </div>
+    <p style="text-align: center; margin-top: 0.5rem;">
+        <span style="color: var(--accent-cyan)">■ Bits 0-1:</span> Team (0-3) &nbsp;&nbsp;
+        <span style="color: var(--accent-magenta)">■ Bits 2-4:</span> Wert (0-7)
+    </p>
+
+    <pre data-lang="cython"><code><span class="cm"># Team-Konstanten</span>
+<span class="kw">DEF</span> TEAM_NONE = <span class="num">0</span>   <span class="cm"># Leer</span>
+<span class="kw">DEF</span> TEAM_ONE = <span class="num">1</span>    <span class="cm"># Team 1</span>
+<span class="kw">DEF</span> TEAM_TWO = <span class="num">2</span>    <span class="cm"># Team 2</span>
+<span class="kw">DEF</span> TEAM_SQUID = <span class="num">3</span>  <span class="cm"># Krake (Hindernis)</span>
+
+<span class="cm"># Feld erstellen: Team in Bits 0-1, Wert in Bits 2-4</span>
+<span class="kw">cdef</span> <span class="ty">int8</span> <span class="fn">make_field</span>(<span class="ty">int</span> team, <span class="ty">int</span> value) <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+    <span class="kw">return</span> &lt;<span class="ty">int8</span>&gt;((team &amp; <span class="num">0x3</span>) | ((value &amp; <span class="num">0x7</span>) &lt;&lt; <span class="num">2</span>))
+    <span class="cm">#              ↑ Bits 0-1     ↑ Bits 2-4 (nach links geschoben)</span>
+
+<span class="cm"># Team extrahieren (Bits 0-1 maskieren)</span>
+<span class="kw">cdef</span> <span class="ty">int</span> <span class="fn">get_team</span>(<span class="ty">int8</span> field) <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+    <span class="kw">return</span> field &amp; <span class="num">0x3</span>  <span class="cm"># 0x3 = 0b00000011</span>
+
+<span class="cm"># Wert extrahieren (nach rechts schieben, dann maskieren)</span>
+<span class="kw">cdef</span> <span class="ty">int</span> <span class="fn">get_value</span>(<span class="ty">int8</span> field) <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+    <span class="kw">return</span> (field >> <span class="num">2</span>) &amp; <span class="num">0x7</span>  <span class="cm"># 0x7 = 0b00000111</span></code></pre>
+
+    <div class="info-box">
+        <strong>💡 Beispiel:</strong> Team 1 mit Wert 4<br>
+        <code>make_field(1, 4)</code> = <code>(1 &amp; 0x3) | ((4 &amp; 0x7) &lt;&lt; 2)</code> = <code>1 | (4 &lt;&lt; 2)</code> = <code>1 | 16</code> = <code>17</code> = <code>0b00010001</code>
+    </div>
+
+    <h3>Das Spielfeld als 1D-Array</h3>
+    <p>Das 10×10 Spielfeld wird als eindimensionales Array mit 100 Elementen gespeichert. Die Umrechnung von 2D zu 1D: <code>index = x * 10 + y</code></p>
+    
+    <pre data-lang="cython"><code><span class="kw">cdef</span> <span class="kw">class</span> <span class="ty">CBoard</span>:
+    <span class="kw">cdef</span> <span class="ty">int8</span>[<span class="num">100</span>] fields   <span class="cm"># Flaches Array für 10×10 Brett</span>
+    <span class="kw">cdef</span> <span class="kw">public</span> <span class="ty">int</span> turn   <span class="cm"># Aktueller Zug (0-59)</span>
+
+    <span class="cm"># 2D-Koordinaten → 1D-Index umrechnen</span>
+    <span class="kw">cdef</span> <span class="ty">int8</span> <span class="fn">get_field</span>(self, <span class="ty">int</span> x, <span class="ty">int</span> y) <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+        <span class="kw">return</span> self.fields[x * <span class="num">10</span> + y]
+        <span class="cm">#                   ↑ Spalte × Breite + Zeile</span></code></pre>
+
+    <h3>Richtungsvektoren</h3>
+    <p>Fische können in 8 Richtungen ziehen. Jede Richtung hat einen Vektor (dx, dy):</p>
+    
+    <pre data-lang="cython"><code><span class="cm"># 8 Richtungen: Index 0-7</span>
+<span class="kw">cdef</span> <span class="ty">int</span>[<span class="num">8</span>][<span class="num">2</span>] DIRECTION_VECTORS = [
+    [<span class="num">0</span>, <span class="num">1</span>],    <span class="cm"># 0: Up         (y+1)</span>
+    [<span class="num">1</span>, <span class="num">1</span>],    <span class="cm"># 1: UpRight    (x+1, y+1)</span>
+    [<span class="num">1</span>, <span class="num">0</span>],    <span class="cm"># 2: Right      (x+1)</span>
+    [<span class="num">1</span>, <span class="num">-1</span>],   <span class="cm"># 3: DownRight  (x+1, y-1)</span>
+    [<span class="num">0</span>, <span class="num">-1</span>],   <span class="cm"># 4: Down       (y-1)</span>
+    [<span class="num">-1</span>, <span class="num">-1</span>],  <span class="cm"># 5: DownLeft   (x-1, y-1)</span>
+    [<span class="num">-1</span>, <span class="num">0</span>],   <span class="cm"># 6: Left       (x-1)</span>
+    [<span class="num">-1</span>, <span class="num">1</span>],   <span class="cm"># 7: UpLeft     (x-1, y+1)</span>
+]</code></pre>
+
+    <h3>Zugweiten-Berechnung</h3>
+    <p>Bei Piranhas hängt die Zugweite von der Anzahl der Fische auf der Bewegungslinie ab:</p>
+
+    <pre data-lang="cython"><code><span class="cm"># Zählt Fische (beide Teams) auf einer Linie</span>
+<span class="kw">cdef</span> <span class="ty">int</span> <span class="fn">count_fish_on_line</span>(<span class="ty">CBoard</span> board, <span class="ty">int</span> x, <span class="ty">int</span> y, <span class="ty">int</span> dx, <span class="ty">int</span> dy) <span class="kw">noexcept</span> <span class="kw">nogil</span>:
+    <span class="kw">cdef</span> <span class="ty">int</span> count = <span class="num">0</span>
+    <span class="kw">cdef</span> <span class="ty">int</span> nx = x + dx   <span class="cm"># Startposition überspringen</span>
+    <span class="kw">cdef</span> <span class="ty">int</span> ny = y + dy
+    
+    <span class="kw">while</span> <span class="num">0</span> &lt;= nx &lt; <span class="num">10</span> <span class="kw">and</span> <span class="num">0</span> &lt;= ny &lt; <span class="num">10</span>:  <span class="cm"># Solange im Brett</span>
+        field = board.get_field(nx, ny)
+        <span class="kw">if</span> get_team(field) == TEAM_ONE <span class="kw">or</span> get_team(field) == TEAM_TWO:
+            count += <span class="num">1</span>
+        nx += dx
+        ny += dy
+    
+    <span class="kw">return</span> count</code></pre>
+
+    <div class="info-box success">
+        <strong>🎮 Spielregel:</strong> Ein Fisch bewegt sich so viele Felder, wie Fische (beider Teams!) auf seiner Bewegungslinie stehen — inklusive sich selbst.
+    </div>
+</section>
+
+<!-- ==================== ZOBRIST ==================== -->
+<section id="zobrist">
+    <h2>#️⃣ Zobrist Hashing</h2>
+
+    <div class="card">
+        <div class="card-title">Das Problem: Gleiche Stellungen erkennen</div>
+        <p>Bei der Spielbaum-Suche erreichen wir oft <strong>dieselbe Stellung</strong> über verschiedene Zugfolgen. Ohne Erkennung würden wir diese Stellungen mehrfach analysieren — Zeitverschwendung!</p>
+        <p><strong>Lösung:</strong> Jede Stellung bekommt einen eindeutigen Hash-Wert. Gleiche Stellung = gleicher Hash.</p>
+    </div>
+
+    <h3>Die Idee hinter Zobrist Hashing</h3>
+    <div class="algo-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <strong>Zufallszahlen vorberechnen</strong>
+            <p>Für jede Kombination aus (Position, Team, Wert) eine zufällige 64-Bit-Zahl generieren.</p>
+        </div>
+    </div>
+    <div class="algo-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+            <strong>Hash berechnen per XOR</strong>
+            <p>Den Hash der Stellung durch XOR aller relevanten Zufallszahlen berechnen.</p>
+        </div>
+    </div>
+    <div class="algo-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+            <strong>Inkrementelle Updates</strong>
+            <p>Bei einem Zug nur die Änderungen XOR-en — viel schneller als neu berechnen!</p>
+        </div>
+    </div>
+
+    <h3>Die Zufallszahlen-Tabelle</h3>
+    <pre data-lang="cython"><code><span class="cm"># 4D-Array: [x][y][team][value] → Zufallszahl</span>
+<span class="kw">cdef</span> <span class="ty">uint64</span>[<span class="num">10</span>][<span class="num">10</span>][<span class="num">4</span>][<span class="num">5</span>] ZOBRIST_PIECE
+<span class="cm"># Für jeden Zug eine Zahl (um Zugwiederholungen zu erkennen)</span>
+<span class="kw">cdef</span> <span class="ty">uint64</span>[<span class="num">61</span>] ZOBRIST_TURN
+
+<span class="kw">cpdef</span> <span class="ty">void</span> <span class="fn">init_zobrist</span>():
+    srand(<span class="num">42</span>)  <span class="cm"># Deterministischer Seed für Reproduzierbarkeit</span>
+    
+    <span class="kw">for</span> x <span class="kw">in</span> range(<span class="num">10</span>):
+        <span class="kw">for</span> y <span class="kw">in</span> range(<span class="num">10</span>):
+            <span class="kw">for</span> t <span class="kw">in</span> range(<span class="num">4</span>):
+                <span class="kw">for</span> v <span class="kw">in</span> range(<span class="num">5</span>):
+                    ZOBRIST_PIECE[x][y][t][v] = _rand64()</code></pre>
+
+    <h3>Inkrementelles Update</h3>
+    <pre data-lang="cython"><code><span class="kw">cpdef</span> <span class="ty">uint64</span> <span class="fn">update_hash_move</span>(<span class="ty">uint64</span> old_hash, ...):
+    h = old_hash
+    
+    <span class="cm"># Zug-Hash ändern</span>
+    h ^= ZOBRIST_TURN[old_turn]   <span class="cm"># Alten Zug raus-XORen</span>
+    h ^= ZOBRIST_TURN[new_turn]   <span class="cm"># Neuen Zug rein-XORen</span>
+    
+    <span class="cm"># Figur bewegen</span>
+    h ^= ZOBRIST_PIECE[start_x][start_y][team][value]   <span class="cm"># Von Start entfernen</span>
+    h ^= ZOBRIST_PIECE[target_x][target_y][team][value] <span class="cm"># Zu Ziel hinzufügen</span>
+    
+    <span class="kw">return</span> h</code></pre>
+
+    <div class="info-box">
+        <strong>🔑 XOR-Eigenschaft:</strong> <code>A ^ B ^ B = A</code><br>
+        Wenn wir etwas zweimal XOR-en, verschwindet es wieder!
+    </div>
+</section>
+
+<!-- ==================== EVALUATE ==================== -->
+<section id="evaluate">
+    <h2>⚖️ Bewertungsfunktion</h2>
+
+    <div class="card">
+        <div class="card-title">Wie gut ist eine Stellung?</div>
+        <p>Die Bewertungsfunktion gibt jeder Spielstellung einen <strong>numerischen Score</strong>. Positiv = gut für uns, negativ = gut für den Gegner.</p>
+        <p>Bei Piranhas gewinnt das Team mit dem wertvollsten <strong>Schwarm</strong> — einer zusammenhängenden Gruppe von Fischen.</p>
+    </div>
+
+    <h3>Schwarm-Analyse mit BFS</h3>
+    <pre data-lang="cython"><code><span class="cm"># Datenstruktur für Schwarm-Ergebnisse</span>
+<span class="kw">cdef</span> <span class="kw">struct</span> <span class="ty">SwarmData</span>:
+    <span class="ty">int</span> best_value         <span class="cm"># Wert des besten Schwarms</span>
+    <span class="ty">int</span> num_swarms         <span class="cm"># Anzahl Schwärme</span>
+    <span class="ty">int</span> best_swarm_size    <span class="cm"># Größe des besten Schwarms</span>
+    <span class="ty">double</span> center_x        <span class="cm"># Schwerpunkt X</span>
+    <span class="ty">double</span> center_y        <span class="cm"># Schwerpunkt Y</span></code></pre>
+
+    <h3>Die Bewertungsformel</h3>
+    <pre data-lang="cython"><code><span class="kw">cpdef</span> <span class="ty">double</span> <span class="fn">evaluate</span>(<span class="ty">CBoard</span> board, <span class="ty">int</span> our_team):
+    our_data = compute_swarm_data(board, our_team)
+    opp_data = compute_swarm_data(board, opp_team)
+    
+    value = <span class="num">0.0</span>
+    
+    <span class="cm"># 1. Schwarm-Wert-Differenz (wichtigster Faktor!)</span>
+    value += (our_data.best_value - opp_data.best_value) * <span class="num">18.0</span>
+    
+    <span class="cm"># 2. Schwarm-Anzahl (weniger ist besser)</span>
+    value -= (our_data.num_swarms - <span class="num">1</span>) * <span class="num">4.0</span>
+    value += (opp_data.num_swarms - <span class="num">1</span>) * <span class="num">4.0</span>
+    
+    <span class="cm"># 3. Material + 4. Isolierte Fische + 5. Distanz</span>
+    ...
+    
+    <span class="kw">return</span> value</code></pre>
+
+    <table>
+        <tr><th>Faktor</th><th>Gewicht</th><th>Bedeutung</th></tr>
+        <tr><td>Schwarm-Wert</td><td><code>×18.0</code></td><td>Wert des besten Schwarms</td></tr>
+        <tr><td>Schwarm-Anzahl</td><td><code>×4.0</code></td><td>Weniger = besser</td></tr>
+        <tr><td>Material</td><td><code>×2.0</code></td><td>Summe aller Fischwerte</td></tr>
+        <tr><td>Isolierte Fische</td><td><code>×3.0</code></td><td>Strafe für Fische außerhalb des Hauptschwarms</td></tr>
+    </table>
+</section>
+
+<!-- ==================== SEARCH ==================== -->
+<section id="search">
+    <h2>🔍 Suchalgorithmus</h2>
+
+    <div class="card">
+        <div class="card-title">Minimax mit Alpha-Beta-Pruning</div>
+        <p>Der Suchalgorithmus simuliert das Spiel mehrere Züge voraus. Er geht davon aus, dass beide Spieler <strong>optimal</strong> spielen — wir maximieren, der Gegner minimiert.</p>
+    </div>
+
+    <h3>Der Spielbaum</h3>
+    <div class="tree-container">
+        <div class="tree">
+            <div class="tree-level">
+                <div class="tree-node max">Wir (MAX)<br>Score: 5</div>
+            </div>
+            <div class="tree-level">
+                <div class="tree-node min">Gegner (MIN)<br>Score: 5</div>
+                <div class="tree-node min pruned">Gegner (MIN)<br>✂️ Cutoff</div>
+                <div class="tree-node min">Gegner (MIN)<br>Score: 3</div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Alpha-Beta erklärt</h3>
+    <div class="algo-step">
+        <div class="step-num">α</div>
+        <div class="step-content"><strong>Alpha</strong> = bester Score, den WIR garantiert erreichen</div>
+    </div>
+    <div class="algo-step">
+        <div class="step-num">β</div>
+        <div class="step-content"><strong>Beta</strong> = bester Score, den der GEGNER garantiert erreicht</div>
+    </div>
+
+    <p>Wenn β ≤ α, wird der Zweig abgeschnitten — der Gegner würde ihn nie zulassen!</p>
+
+    <h3>Iterative Deepening</h3>
+    <pre data-lang="cython"><code><span class="kw">cpdef</span> iterative_deepening(game_state, our_team, time_limit):
+    depth = <span class="num">1</span>
+    best_move = moves[<span class="num">0</span>]
+    
+    <span class="kw">while</span> depth &lt;= <span class="num">30</span>:
+        <span class="kw">try</span>:
+            score, move = alpha_beta(board, depth, -INF, INF, maximizing)
+            <span class="kw">if</span> move: best_move = move
+            
+            <span class="kw">if</span> abs(score) >= WIN_SCORE: <span class="kw">break</span>  <span class="cm"># Gewinn gefunden!</span>
+            <span class="kw">if</span> elapsed > time_limit * <span class="num">0.6</span>: <span class="kw">break</span>  <span class="cm"># Zeit fast um</span>
+            
+            depth += <span class="num">1</span>
+        <span class="kw">except</span>: <span class="kw">break</span>  <span class="cm"># Timeout</span>
+    
+    <span class="kw">return</span> best_move</code></pre>
+
+    <div class="info-box">
+        <strong>💡 Vorteile:</strong> Immer einen gültigen Zug haben, TT-Einträge nutzen, bessere Zugsortierung.
+    </div>
+</section>
+
+<!-- ==================== CLIENT ==================== -->
+<section id="client">
+    <h2>🎮 Client &amp; Setup</h2>
+
+    <div class="card">
+        <div class="card-title">Der Game Client</div>
+        <p>Verbindet sich mit dem Spielserver, empfängt Spielstände und sendet Züge zurück.</p>
+    </div>
+
+    <h3>client_cython.py</h3>
+    <pre data-lang="python"><code><span class="kw">class</span> <span class="ty">CythonLogic</span>(IClientHandler):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        init_search()  <span class="cm"># Cython initialisieren</span>
+    
+    <span class="kw">def</span> <span class="fn">calculate_move</span>(self) -> Move:
+        <span class="kw">return</span> iterative_deepening(
+            self.game_state,
+            self.our_team_int,
+            TIME_LIMIT  <span class="cm"># 1.8 Sekunden</span>
+        )
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    Starter(CythonLogic())</code></pre>
+
+    <h3>Kompilieren</h3>
+    <pre data-lang="bash"><code><span class="cm"># Cython-Module kompilieren</span>
+python setup.py build_ext --inplace
+
+<span class="cm"># Bot starten</span>
+python client_cython.py</code></pre>
+
+    <div class="info-box success">
+        <strong>📁 Projektstruktur:</strong><br>
+        <code>cython_core/</code> → board.pyx, zobrist.pyx, evaluate.pyx, search.pyx<br>
+        <code>client_cython.py</code> → Hauptprogramm<br>
+        <code>setup.py</code> → Build-Konfiguration
+    </div>
+</section>
+
+</main>
+
+<footer>
+    <p>Erstellt für die Software-Challenge Germany — Piranhas KI Dokumentation</p>
+</footer>
+
+<script>
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.getElementById(btn.dataset.section).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+});
+</script>
+</body>
+</html>
