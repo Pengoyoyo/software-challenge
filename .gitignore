@@ -1,0 +1,5 @@
+.venv
+software-challenge-server
+LaTex
+*.so
+*.c
