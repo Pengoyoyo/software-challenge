@@ -23,13 +23,8 @@ class TimeoutException(Exception):
     pass
 
 
-# ============================================================================
-# Zobrist Hashing - vorberechnete Tabellen
-# ============================================================================
-
 random.seed(42)
 
-# [x][y][team][value] -> random 64-bit
 ZOBRIST_PIECE = [
     [
         [[random.getrandbits(64) for _ in range(5)] for _ in range(2)]
@@ -41,7 +36,6 @@ ZOBRIST_TURN = [random.getrandbits(64) for _ in range(61)]
 
 
 def compute_zobrist_full(game_state: GameState) -> int:
-    """Vollständige Zobrist-Berechnung (nur initial)."""
     h = ZOBRIST_TURN[game_state.turn]
     for x, row in enumerate(game_state.board.map):
         for y, ft in enumerate(row):
@@ -59,14 +53,11 @@ def zobrist_update_move(
     game_state: GameState,
     new_state: GameState
 ) -> int:
-    """Inkrementelles Zobrist-Update nach einem Zug."""
     h = old_hash
 
-    # Turn update
     h ^= ZOBRIST_TURN[old_turn]
     h ^= ZOBRIST_TURN[new_state.turn]
 
-    # Finde Start-Feld Info
     start = move.start
     old_field = game_state.board.get_field(start)
     old_team = old_field.get_team()
@@ -74,10 +65,8 @@ def zobrist_update_move(
 
     if old_team is not None:
         t = 0 if old_team == TeamEnum.One else 1
-        # Entferne Figur von alter Position
         h ^= ZOBRIST_PIECE[start.x][start.y][t][old_value]
 
-    # Finde Ziel-Position (simuliere Bewegung)
     target = start
     board = game_state.board
     direction_vec = move.direction.to_vector()
@@ -90,33 +79,22 @@ def zobrist_update_move(
             break
         target = next_pos
 
-    # Hole neue Figur-Info vom neuen State
     new_field = new_state.board.get_field(target)
     new_team = new_field.get_team()
     new_value = new_field.get_value()
 
     if new_team is not None:
         t = 0 if new_team == TeamEnum.One else 1
-        # Füge Figur an neuer Position hinzu
         h ^= ZOBRIST_PIECE[target.x][target.y][t][new_value]
 
-    # Prüfe ob Gegner gefangen wurde (Wert könnte sich geändert haben)
-    # Das passiert wenn die Figur einen Gegner "frisst"
     if old_value != new_value and old_team is not None:
-        # Der Wert hat sich geändert - wir müssen auch die gefangenen Figuren updaten
-        # Das ist komplizierter, also fallback auf full recompute wenn Wert sich ändert
         return compute_zobrist_full(new_state)
 
     return h
 
 
-# ============================================================================
-# Schwarm-Cache Struktur
-# ============================================================================
-
 @dataclass
 class NodeContext:
-    """Cached Daten für einen Suchknoten."""
     our_swarms: list
     opp_swarms: list
     our_swarm_val: int
@@ -132,13 +110,11 @@ def build_node_context(
     our_team: TeamEnum,
     opp_team: TeamEnum
 ) -> NodeContext:
-    """Berechnet alle Schwarm-Daten einmalig für einen Knoten."""
     board = game_state.board
 
     our_swarms = RulesEngine.swarms_of_team(board, our_team)
     opp_swarms = RulesEngine.swarms_of_team(board, opp_team)
 
-    # Bester Schwarm für uns
     our_best_val = 0
     our_best = []
     for s in our_swarms:
@@ -147,7 +123,6 @@ def build_node_context(
             our_best_val = val
             our_best = s
 
-    # Bester Schwarm für Gegner
     opp_best_val = 0
     opp_best = []
     for s in opp_swarms:
@@ -156,7 +131,6 @@ def build_node_context(
             opp_best_val = val
             opp_best = s
 
-    # Koordinaten als (x,y) Tupel speichern (hashbar)
     our_best_set = {(p.x, p.y) for p in our_best}
     opp_best_set = {(p.x, p.y) for p in opp_best}
 
@@ -172,19 +146,12 @@ def build_node_context(
     )
 
 
-# ============================================================================
-# Evaluierung mit Context
-# ============================================================================
-
 def evaluate_with_context(
     game_state: GameState,
     ctx: NodeContext,
     our_team: TeamEnum,
     opp_team: TeamEnum
 ) -> float:
-    """Schnelle Evaluierung mit vorberechneten Schwarm-Daten."""
-
-    # Terminal Check
     if ctx.our_num_swarms == 0:
         return -WIN_SCORE
     if ctx.opp_num_swarms == 0:
@@ -198,14 +165,11 @@ def evaluate_with_context(
 
     value = 0.0
 
-    # Schwarmwert
-    value += (ctx.our_swarm_val - ctx.opp_swarm_val) * 18.0
+    value += (ctx.our_swarm_val - ctx.opp_swarm_val) * 17.74
 
-    # Anzahl Schwärme
-    value -= (ctx.our_num_swarms - 1) * 4.0
-    value += (ctx.opp_num_swarms - 1) * 4.0
+    value -= (ctx.our_num_swarms - 1) * 3.0
+    value += (ctx.opp_num_swarms - 1) * 3.0
 
-    # Schwarm-Zentren (ctx.our_best_swarm enthält (x,y) Tupel)
     if ctx.our_best_swarm:
         our_cx = sum(p[0] for p in ctx.our_best_swarm) / len(ctx.our_best_swarm)
         our_cy = sum(p[1] for p in ctx.our_best_swarm) / len(ctx.our_best_swarm)
@@ -218,7 +182,6 @@ def evaluate_with_context(
     else:
         opp_cx, opp_cy = 4.5, 4.5
 
-    # Board-Durchlauf für Material, Distanz, Isolation
     our_material = 0
     opp_material = 0
     our_isolated = 0
@@ -250,17 +213,13 @@ def evaluate_with_context(
                     opp_isolated += val
 
     value += (our_material - opp_material) * 2.0
-    value -= our_isolated * 3.0
-    value += opp_isolated * 3.0
-    value -= our_dist * 0.7
-    value += opp_dist * 0.7
+    value -= our_isolated * 4.0
+    value += opp_isolated * 4.0
+    value -= our_dist * 0.63
+    value += opp_dist * 0.63
 
     return value
 
-
-# ============================================================================
-# Move Ordering
-# ============================================================================
 
 class MoveOrderer:
     def __init__(self):
@@ -287,28 +246,23 @@ class MoveOrderer:
         opp_positions: set[Coordinate],
         board
     ) -> list[Move]:
-        """Schnelles Move Ordering ohne extra swarms_of_team Aufrufe."""
         if not moves:
             return moves
 
         killers = self.killer_moves[depth] if depth < len(self.killer_moves) else [None, None]
 
         def priority(move: Move) -> float:
-            # TT-Move
             if tt_move is not None and move == tt_move:
                 return 100000.0
 
             score = 0.0
 
-            # Killer
             if move in killers:
                 score += 5000.0
 
-            # History
             key = (move.start.x, move.start.y, int(move.direction))
             score += self.history.get(key, 0) * 0.1
 
-            # Zielposition berechnen
             target = move.start
             direction_vec = move.direction.to_vector()
             for _ in range(10):
@@ -319,7 +273,6 @@ class MoveOrderer:
                     break
                 target = next_pos
 
-            # Fängt Gegner?
             for dx in (-1, 0, 1):
                 for dy in (-1, 0, 1):
                     if dx == 0 and dy == 0:
@@ -329,21 +282,15 @@ class MoveOrderer:
                         if (nx, ny) in opp_positions:
                             score += 50.0
 
-            # Verbindet mit Schwarm?
             if (target.x, target.y) in our_positions:
                 score += 30.0
 
-            # Zentrum
             score -= (abs(target.x - 4.5) + abs(target.y - 4.5)) * 2.0
 
             return score
 
         return sorted(moves, key=priority, reverse=True)
 
-
-# ============================================================================
-# Alpha-Beta Suche
-# ============================================================================
 
 class AlphaBetaSearch:
     def __init__(self, our_team: TeamEnum):
@@ -379,7 +326,6 @@ class AlphaBetaSearch:
 
         alpha_orig = alpha
 
-        # TT Lookup
         tt_move = None
         if state_hash in self.tt:
             tt_score, tt_depth, tt_flag, tt_move = self.tt[state_hash]
@@ -394,10 +340,8 @@ class AlphaBetaSearch:
                 if alpha >= beta:
                     return tt_score, tt_move
 
-        # Baue Context einmal für diesen Knoten
         ctx = build_node_context(game_state, self.our_team, self.opp_team)
 
-        # Terminal Check mit Context
         if ctx.our_num_swarms == 0:
             return -WIN_SCORE + (60 - depth), None
         if ctx.opp_num_swarms == 0:
@@ -409,7 +353,6 @@ class AlphaBetaSearch:
             elif ctx.opp_swarm_val > ctx.our_swarm_val:
                 return -WIN_SCORE + (60 - depth), None
 
-        # Leaf
         if depth == 0:
             if state_hash in self.eval_cache:
                 return self.eval_cache[state_hash], None
@@ -422,7 +365,6 @@ class AlphaBetaSearch:
             score = evaluate_with_context(game_state, ctx, self.our_team, self.opp_team)
             return score, None
 
-        # Positionen für Move Ordering aus Context (als Tupel)
         our_positions = set()
         for s in ctx.our_swarms:
             our_positions.update((p.x, p.y) for p in s)
@@ -446,7 +388,6 @@ class AlphaBetaSearch:
                     state_hash, game_state.turn, move, game_state, new_state
                 )
 
-                # LMR
                 reduction = 0
                 if depth >= LMR_DEPTH_LIMIT and moves_searched >= LMR_MOVE_LIMIT and not is_pv:
                     reduction = 1
@@ -481,7 +422,6 @@ class AlphaBetaSearch:
 
                 moves_searched += 1
 
-            # TT Store
             if max_eval <= alpha_orig:
                 tt_flag = TT_UPPER
             elif max_eval >= beta:
@@ -600,10 +540,6 @@ class AlphaBetaSearch:
         return best_move
 
 
-# ============================================================================
-# Client Handler
-# ============================================================================
-
 class Logic(IClientHandler):
     def __init__(self):
         self.game_state: GameState | None = None
@@ -632,5 +568,5 @@ class Logic(IClientHandler):
 
 
 if __name__ == "__main__":
-    print("Bot v2 - Inkrementelles Zobrist + Schwarm-Cache")
+    print("Bot v2")
     Starter(Logic())

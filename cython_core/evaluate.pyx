@@ -10,7 +10,6 @@ DEF TEAM_NONE = 0
 DEF TEAM_ONE = 1
 DEF TEAM_TWO = 2
 
-# Nachbar-Offsets für Schwarm-BFS (8 Richtungen)
 cdef int[8][2] NEIGHBOR_OFFSETS = [
     [-1, -1], [-1, 0], [-1, 1],
     [0, -1],           [0, 1],
@@ -148,9 +147,9 @@ cpdef double evaluate(CBoard board, int our_team):
 
     cdef double value = 0.0
 
-    value += (our_data.best_value - opp_data.best_value) * 18.0
-    value -= (our_data.num_swarms - 1) * 4.0
-    value += (opp_data.num_swarms - 1) * 4.0
+    value += (our_data.best_value - opp_data.best_value) * 17.74
+    value -= (our_data.num_swarms - 1) * 3.0
+    value += (opp_data.num_swarms - 1) * 3.0
 
     cdef int our_material = 0
     cdef int opp_material = 0
@@ -189,10 +188,10 @@ cpdef double evaluate(CBoard board, int our_team):
                     opp_isolated += val
 
     value += (our_material - opp_material) * 2.0
-    value -= our_isolated * 3.0
-    value += opp_isolated * 3.0
-    value -= our_dist * 0.7
-    value += opp_dist * 0.7
+    value -= our_isolated * 4.0
+    value += opp_isolated * 4.0
+    value -= our_dist * 0.63
+    value += opp_dist * 0.63
 
     return value
 

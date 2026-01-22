@@ -6,34 +6,22 @@ from socha.api.networking.game_client import IClientHandler
 from socha.starter import Starter
 
 
-# Zeitlimit pro Zug in Sekunden (mit größerem Puffer für Sicherheit)
 TIME_LIMIT = 1.8
-
-# Große Werte für Gewinn/Verlust
 INF = 1_000_000
 WIN_SCORE = 100_000
 
-# Transposition Table Flags
-TT_EXACT = 0  # Exakter Wert
-TT_LOWER = 1  # Untere Schranke (Alpha-Cutoff)
-TT_UPPER = 2  # Obere Schranke (Beta-Cutoff)
+TT_EXACT = 0
+TT_LOWER = 1
+TT_UPPER = 2
 
 
 class TimeoutException(Exception):
-    """Wird geworfen wenn das Zeitlimit erreicht ist."""
-
     pass
-
-
-# ============================================================================
-# Evaluierungsfunktionen
-# ============================================================================
 
 
 def groesster_schwarm(
     game_state: GameState, team: TeamEnum
 ) -> tuple[int, list[Coordinate]]:
-    """Berechnet den Wert und die Positionen des größten Schwarms eines Teams."""
     max_value = 0
     groesster = []
 
@@ -47,12 +35,10 @@ def groesster_schwarm(
 
 
 def anzahl_schwaerme(game_state: GameState, team: TeamEnum) -> int:
-    """Zählt die Anzahl der Schwärme eines Teams."""
     return len(RulesEngine.swarms_of_team(game_state.board, team))
 
 
 def material(game_state: GameState, team: TeamEnum) -> int:
-    """Berechnet den Materialwert eines Teams."""
     score = 0
     for row in game_state.board.map:
         for ft in row:
@@ -63,7 +49,6 @@ def material(game_state: GameState, team: TeamEnum) -> int:
 
 
 def einzelfische(game_state: GameState, team: TeamEnum) -> int:
-    """Berechnet den Wert aller isolierten Fische (1er-Schwärme)."""
     value = 0
     for schwarm in RulesEngine.swarms_of_team(game_state.board, team):
         if len(schwarm) == 1:
@@ -72,12 +57,10 @@ def einzelfische(game_state: GameState, team: TeamEnum) -> int:
 
 
 def mean(lst: list[int]) -> float:
-    """Berechnet den Durchschnitt einer Liste."""
     return sum(lst) / len(lst) if lst else 0
 
 
 def distanz_zum_schwarm(game_state: GameState, team: TeamEnum) -> float:
-    """Berechnet die Gesamtdistanz aller Fische zum Zentrum des größten Schwarms."""
     _, schwarm = groesster_schwarm(game_state, team)
     if not schwarm:
         return 0
@@ -99,7 +82,6 @@ def distanz_zum_schwarm(game_state: GameState, team: TeamEnum) -> float:
 
 
 def schwarm_kompaktheit(game_state: GameState, team: TeamEnum) -> float:
-    """Berechnet wie kompakt der größte Schwarm ist (niedriger = besser)."""
     _, schwarm = groesster_schwarm(game_state, team)
     if len(schwarm) <= 1:
         return 0
@@ -117,23 +99,14 @@ def schwarm_kompaktheit(game_state: GameState, team: TeamEnum) -> float:
 
 
 def check_winner(game_state: GameState) -> TeamEnum | None:
-    """
-    Prüft ob ein Team gewonnen hat.
-    Ein Team gewinnt wenn:
-    - Der Gegner keine Fische mehr hat
-    - Der Gegner keinen Schwarm mehr hat (alle gefangen)
-    - Das Spiel zu Ende ist (Zug 60) und man mehr Punkte hat
-    """
     team_one_swarms = RulesEngine.swarms_of_team(game_state.board, TeamEnum.One)
     team_two_swarms = RulesEngine.swarms_of_team(game_state.board, TeamEnum.Two)
 
-    # Wenn ein Team keine Schwärme mehr hat
     if not team_one_swarms:
         return TeamEnum.Two
     if not team_two_swarms:
         return TeamEnum.One
 
-    # Bei Spielende (Zug 60)
     if game_state.turn >= 60:
         score_one = groesster_schwarm(game_state, TeamEnum.One)[0]
         score_two = groesster_schwarm(game_state, TeamEnum.Two)[0]
@@ -141,17 +114,11 @@ def check_winner(game_state: GameState) -> TeamEnum | None:
             return TeamEnum.One
         elif score_two > score_one:
             return TeamEnum.Two
-        # Unentschieden - kein Gewinner
 
     return None
 
 
 def evaluate(game_state: GameState, our_team: TeamEnum, opp_team: TeamEnum) -> float:
-    """
-    Erweiterte Evaluierungsfunktion für Spielzustände.
-    Positive Werte = gut für our_team, negative = schlecht.
-    """
-    # Prüfe auf Gewinn/Verlust
     winner = check_winner(game_state)
     if winner == our_team:
         return WIN_SCORE
@@ -160,60 +127,39 @@ def evaluate(game_state: GameState, our_team: TeamEnum, opp_team: TeamEnum) -> f
 
     value = 0.0
 
-    # Größter Schwarm (sehr wichtig - das ist das Hauptziel!)
     our_schwarm_value = groesster_schwarm(game_state, our_team)[0]
     opp_schwarm_value = groesster_schwarm(game_state, opp_team)[0]
     value += (our_schwarm_value - opp_schwarm_value) * 17.74
 
-    # Anzahl Schwärme (weniger ist besser - ein großer Schwarm ist das Ziel)
     our_num_swarms = anzahl_schwaerme(game_state, our_team)
     opp_num_swarms = anzahl_schwaerme(game_state, opp_team)
-    value -= (our_num_swarms - 1) * 3  # Strafe für mehr als 1 Schwarm
-    value += (opp_num_swarms - 1) * 3
+    value -= (our_num_swarms - 1) * 3.0
+    value += (opp_num_swarms - 1) * 3.0
 
-    # Materialvorteil
     our_material = material(game_state, our_team)
     opp_material = material(game_state, opp_team)
-    value += (our_material - opp_material) * 2
+    value += (our_material - opp_material) * 2.0
 
-    # Einzelfische sind schlecht (leicht zu fangen, nicht im Schwarm)
     our_einzelfische = einzelfische(game_state, our_team)
     opp_einzelfische = einzelfische(game_state, opp_team)
-    value -= our_einzelfische * 4
-    value += opp_einzelfische * 4
+    value -= our_einzelfische * 4.0
+    value += opp_einzelfische * 4.0
 
-    # Distanz zum Schwarm (Fische sollten zusammenbleiben)
     our_dist = distanz_zum_schwarm(game_state, our_team)
     opp_dist = distanz_zum_schwarm(game_state, opp_team)
     value -= our_dist * 0.63
     value += opp_dist * 0.63
 
-    # Kompaktheit des Schwarms
-    our_kompakt = schwarm_kompaktheit(game_state, our_team)
-    opp_kompakt = schwarm_kompaktheit(game_state, opp_team)
-    value -= our_kompakt * 0
-    value += opp_kompakt * 0
-
     return value
-
-
-# ============================================================================
-# Move Ordering (für besseres Pruning)
-# ============================================================================
 
 
 def order_moves(
     game_state: GameState, moves: list[Move], maximizing: bool
 ) -> list[Move]:
-    """
-    Sortiert Züge nach ihrer voraussichtlichen Güte.
-    Schnelle Heuristik ohne perform_move() - nur Zielfeld-Analyse.
-    """
     current_team = RulesEngine.get_team_on_turn(game_state.turn)
     opp_team = current_team.opponent()
     board = game_state.board
 
-    # Berechne Schwarm-Positionen einmal
     our_swarm_positions: set[Coordinate] = set()
     for schwarm in RulesEngine.swarms_of_team(board, current_team):
         our_swarm_positions.update(schwarm)
@@ -223,12 +169,10 @@ def order_moves(
         opp_positions.update(schwarm)
 
     def move_score(move: Move) -> float:
-        """Schnelle heuristische Bewertung ohne perform_move()."""
         score = 0.0
 
-        # Berechne Zielposition
         target = move.start
-        for _ in range(4):  # Max 4 Schritte in eine Richtung
+        for _ in range(4):
             next_pos = target.move(move.direction)
             if not (0 <= next_pos.x < 10 and 0 <= next_pos.y < 10):
                 break
@@ -237,37 +181,26 @@ def order_moves(
                 break
             target = next_pos
 
-        # Fängt der Zug einen Gegner? (Ziel neben Gegner)
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 if dx == 0 and dy == 0:
                     continue
                 neighbor = Coordinate(target.x + dx, target.y + dy)
                 if neighbor in opp_positions:
-                    score += 10  # Potenziell Fang
+                    score += 10
 
-        # Bewegt sich Richtung eigenem Schwarm?
         if target in our_swarm_positions:
-            score += 5  # Verbindet sich mit Schwarm
+            score += 5
 
-        # Bewegt sich weg vom Rand? (Zentrum ist besser)
         center_dist = abs(target.x - 4.5) + abs(target.y - 4.5)
         score -= center_dist * 0.5
 
         return score
 
-    # Sortiere absteigend nach Score (beste Züge zuerst)
     return sorted(moves, key=move_score, reverse=True)
 
 
-# ============================================================================
-# Alpha-Beta Pruning mit iterativer Vertiefung
-# ============================================================================
-
-
 class AlphaBetaSearch:
-    """Alpha-Beta Pruning Suchklasse mit iterativer Vertiefung."""
-
     def __init__(self, our_team: TeamEnum):
         self.our_team = our_team
         self.opp_team = our_team.opponent()
@@ -275,27 +208,21 @@ class AlphaBetaSearch:
         self.time_limit = TIME_LIMIT
         self.nodes_searched = 0
         self.tt_hits = 0
-        # Transposition Table: hash -> (score, depth, flag, best_move)
         self.transposition_table: dict[int, tuple[float, int, int, Move | None]] = {}
 
     def is_timeout(self) -> bool:
-        """Prüft ob das Zeitlimit erreicht ist."""
         return time.time() - self.start_time >= self.time_limit
 
     def check_timeout(self) -> None:
-        """Wirft Exception wenn Timeout erreicht."""
         if self.is_timeout():
             raise TimeoutException()
 
     def get_state_hash(self, game_state: GameState) -> int:
-        """Berechnet einen Hash für den Spielzustand."""
-        # Schneller Hash: Nur Positionen und Werte als String
         parts = []
         for x, row in enumerate(game_state.board.map):
             for y, ft in enumerate(row):
                 team = ft.get_team()
                 if team is not None:
-                    # Format: "x,y,team,value"
                     t = 1 if team == TeamEnum.One else 2
                     parts.append(f"{x}{y}{t}{ft.get_value()}")
         return hash(("".join(parts), game_state.turn))
@@ -308,26 +235,12 @@ class AlphaBetaSearch:
         beta: float,
         maximizing: bool,
     ) -> tuple[float, Move | None]:
-        """
-        Alpha-Beta Pruning Algorithmus mit Transposition Table.
-
-        Args:
-            game_state: Aktueller Spielzustand
-            depth: Verbleibende Suchtiefe
-            alpha: Beste garantierte Bewertung für Maximierer
-            beta: Beste garantierte Bewertung für Minimierer
-            maximizing: True wenn wir maximieren, False wenn minimieren
-
-        Returns:
-            (Bewertung, bester Zug)
-        """
         self.check_timeout()
         self.nodes_searched += 1
 
         alpha_orig = alpha
         state_hash = self.get_state_hash(game_state)
 
-        # Transposition Table Lookup
         if state_hash in self.transposition_table:
             tt_score, tt_depth, tt_flag, tt_move = self.transposition_table[state_hash]
             if tt_depth >= depth:
@@ -342,32 +255,26 @@ class AlphaBetaSearch:
                 if alpha >= beta:
                     return tt_score, tt_move
 
-        # Spielende erreicht?
         winner = check_winner(game_state)
         if winner == self.our_team:
-            return WIN_SCORE - (60 - depth), None  # Früher gewinnen ist besser
+            return WIN_SCORE - (60 - depth), None
         elif winner == self.opp_team:
-            return -WIN_SCORE + (60 - depth), None  # Später verlieren ist besser
+            return -WIN_SCORE + (60 - depth), None
 
-        # Blattknoten - evaluiere
         if depth == 0:
             return evaluate(game_state, self.our_team, self.opp_team), None
 
         moves = game_state.possible_moves()
         if not moves:
-            # Keine Züge möglich - Bewertung zurückgeben
             return evaluate(game_state, self.our_team, self.opp_team), None
 
-        # Move Ordering: TT-Move zuerst, dann normale Sortierung
         tt_best_move = None
         if state_hash in self.transposition_table:
             tt_best_move = self.transposition_table[state_hash][3]
 
         if tt_best_move is not None and tt_best_move in moves:
-            # TT-Move an den Anfang
             moves = [tt_best_move] + [m for m in moves if m != tt_best_move]
         elif depth >= 2:
-            # Normale Move Ordering nur bei höheren Tiefen
             moves = order_moves(game_state, moves, maximizing)
 
         best_move = moves[0]
@@ -387,9 +294,8 @@ class AlphaBetaSearch:
 
                 alpha = max(alpha, eval_score)
                 if beta <= alpha:
-                    break  # Beta-Cutoff
+                    break
 
-            # Transposition Table Store
             if max_eval <= alpha_orig:
                 tt_flag = TT_UPPER
             elif max_eval >= beta:
@@ -412,9 +318,8 @@ class AlphaBetaSearch:
 
                 beta = min(beta, eval_score)
                 if beta <= alpha:
-                    break  # Alpha-Cutoff
+                    break
 
-            # Transposition Table Store
             if min_eval <= alpha_orig:
                 tt_flag = TT_UPPER
             elif min_eval >= beta:
@@ -426,26 +331,21 @@ class AlphaBetaSearch:
             return min_eval, best_move
 
     def iterative_deepening(self, game_state: GameState) -> Move:
-        """
-        Iterative Vertiefung - sucht mit steigender Tiefe bis Timeout.
-        Gibt den besten gefundenen Zug zurück.
-        """
         self.start_time = time.time()
         self.nodes_searched = 0
 
         moves = game_state.possible_moves()
         if len(moves) == 1:
-            return moves[0]  # Nur ein Zug möglich
+            return moves[0]
 
         best_move = moves[0]
         best_score = -INF
 
-        # Bestimme ob wir maximieren (wir sind am Zug)
         current_team = RulesEngine.get_team_on_turn(game_state.turn)
         maximizing = current_team == self.our_team
 
         depth = 1
-        max_depth = 20  # Sicherheitslimit
+        max_depth = 20
 
         while depth <= max_depth and not self.is_timeout():
             try:
@@ -461,7 +361,6 @@ class AlphaBetaSearch:
                     f"TT-Hits={self.tt_hits}, TT-Size={len(self.transposition_table)}, Zeit={elapsed:.2f}s"
                 )
 
-                # Wenn wir einen Gewinnzug gefunden haben, abbrechen
                 if abs(score) >= WIN_SCORE - 100:
                     print(f"Gewinnzug gefunden bei Tiefe {depth}!")
                     break
@@ -478,32 +377,21 @@ class AlphaBetaSearch:
         return best_move
 
 
-# ============================================================================
-# Client Handler
-# ============================================================================
-
-
 class AlphaBetaLogic(IClientHandler):
-    """Client Handler mit Alpha-Beta Pruning."""
-
     def __init__(self) -> None:
         self.game_state: GameState | None = None
         self.our_team: TeamEnum | None = None
         self.searcher: AlphaBetaSearch | None = None
 
     def on_update(self, game_state: GameState) -> None:
-        """Wird aufgerufen wenn ein neuer Spielzustand empfangen wird."""
         self.game_state = game_state
 
-        # Bestimme unser Team beim ersten Update
         if self.our_team is None:
-            # Wir sind das Team das als nächstes dran ist
             self.our_team = RulesEngine.get_team_on_turn(game_state.turn)
             self.searcher = AlphaBetaSearch(self.our_team)
             print(f"Spiele als Team: {self.our_team}")
 
     def calculate_move(self) -> Move:
-        """Berechnet den besten Zug mittels Alpha-Beta Pruning."""
         assert self.game_state is not None
         assert self.searcher is not None
 
@@ -516,14 +404,9 @@ class AlphaBetaLogic(IClientHandler):
         return best_move
 
     def on_game_over(self, result) -> None:
-        """Wird aufgerufen wenn das Spiel endet."""
         print(f"\n=== Spielende ===")
         print(f"Ergebnis: {result}")
 
-
-# ============================================================================
-# Main
-# ============================================================================
 
 if __name__ == "__main__":
     print("Starte Alpha-Beta Pruning Bot...")
