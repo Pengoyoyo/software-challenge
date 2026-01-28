@@ -1,0 +1,59 @@
+{
+  "bots": [
+    {
+      "name": "CythonEngine",
+      "path": "/home/server/Software-Challenge/client_cython.py",
+      "wins": 34,
+      "losses": 6,
+      "draws": 0,
+      "errors": 0,
+      "games": 40,
+      "score": 0.85,
+      "winrate": "85.0%"
+    },
+    {
+      "name": "AlphaBeta-LMR",
+      "path": "/home/server/Software-Challenge/client_optimized.py",
+      "wins": 24,
+      "losses": 16,
+      "draws": 0,
+      "errors": 0,
+      "games": 40,
+      "score": 0.6,
+      "winrate": "60.0%"
+    },
+    {
+      "name": "AlphaBeta-Iterative",
+      "path": "/home/server/Software-Challenge/client_v2.py",
+      "wins": 23,
+      "losses": 17,
+      "draws": 0,
+      "errors": 0,
+      "games": 40,
+      "score": 0.575,
+      "winrate": "57.5%"
+    },
+    {
+      "name": "AlphaBeta-Vanilla",
+      "path": "/home/server/Software-Challenge/client.py",
+      "wins": 9,
+      "losses": 29,
+      "draws": 0,
+      "errors": 2,
+      "games": 38,
+      "score": 0.237,
+      "winrate": "23.7%"
+    },
+    {
+      "name": "Legacy-Prototype",
+      "path": "/home/server/Software-Challenge/client_v1.py",
+      "wins": 8,
+      "losses": 30,
+      "draws": 0,
+      "errors": 2,
+      "games": 38,
+      "score": 0.211,
+      "winrate": "21.1%"
+    }
+  ]
+}

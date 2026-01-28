@@ -14,23 +14,23 @@ class CythonLogic(IClientHandler):
         self.our_team_int: int = 0
 
         init_search()
-        print("Cython-Module geladen")
+        print("Cython-Module geladen", flush=True)
 
     def on_update(self, game_state: GameState) -> None:
         self.game_state = game_state
         if self.our_team is None:
             self.our_team = RulesEngine.get_team_on_turn(game_state.turn)
             self.our_team_int = 1 if int(self.our_team) == 0 else 2
-            print(f"Team: {self.our_team} (int: {self.our_team_int})")
+            print(f"Team: {self.our_team} (int: {self.our_team_int})", flush=True)
 
     def calculate_move(self) -> Move:
         assert self.game_state is not None
 
-        print(f"\n=== Zug {self.game_state.turn + 1} ===")
+        print(f"\n=== Zug {self.game_state.turn + 1} ===", flush=True)
 
         best_move = iterative_deepening(self.game_state, self.our_team_int, TIME_LIMIT)
 
-        print(f"-> {best_move.start} {best_move.direction}")
+        print(f"-> {best_move.start} {best_move.direction}", flush=True)
         return best_move
 
     def on_game_over(self, result) -> None:

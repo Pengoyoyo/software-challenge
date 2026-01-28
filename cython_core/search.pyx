@@ -17,6 +17,8 @@ DEF TT_LOWER = 1
 DEF TT_UPPER = 2
 DEF TEAM_ONE = 1
 DEF TEAM_TWO = 2
+DEF LMR_DEPTH_LIMIT = 3
+DEF LMR_MOVE_LIMIT = 4
 
 
 cdef struct TTEntry:
@@ -137,7 +139,8 @@ cdef tuple alpha_beta(
     int depth,
     double alpha,
     double beta,
-    bint maximizing
+    bint maximizing,
+    bint is_pv
 ):
     if state.is_timeout():
         raise Exception("Timeout")
@@ -190,6 +193,7 @@ cdef tuple alpha_beta(
     cdef uint64 new_hash
     cdef double score
     cdef int target_x, target_y, team, value
+    cdef int reduction
 
     if maximizing:
         best_score = -INF
@@ -206,7 +210,19 @@ cdef tuple alpha_beta(
                 m[0], m[1], target_x, target_y, team, value
             )
 
-            score, _ = alpha_beta(state, new_board, new_hash, depth - 1, alpha, beta, False)
+            reduction = 0
+            if depth >= LMR_DEPTH_LIMIT and i >= LMR_MOVE_LIMIT and not is_pv:
+                reduction = 1
+
+            if reduction > 0:
+                score, _ = alpha_beta(state, new_board, new_hash,
+                                      depth - 1 - reduction, alpha, beta, False, False)
+                if score > alpha:
+                    score, _ = alpha_beta(state, new_board, new_hash,
+                                          depth - 1, alpha, beta, False, i == 0 and is_pv)
+            else:
+                score, _ = alpha_beta(state, new_board, new_hash,
+                                      depth - 1, alpha, beta, False, i == 0 and is_pv)
 
             if score > best_score:
                 best_score = score
@@ -234,7 +250,19 @@ cdef tuple alpha_beta(
                 m[0], m[1], target_x, target_y, team, value
             )
 
-            score, _ = alpha_beta(state, new_board, new_hash, depth - 1, alpha, beta, True)
+            reduction = 0
+            if depth >= LMR_DEPTH_LIMIT and i >= LMR_MOVE_LIMIT and not is_pv:
+                reduction = 1
+
+            if reduction > 0:
+                score, _ = alpha_beta(state, new_board, new_hash,
+                                      depth - 1 - reduction, alpha, beta, True, False)
+                if score < beta:
+                    score, _ = alpha_beta(state, new_board, new_hash,
+                                          depth - 1, alpha, beta, True, i == 0 and is_pv)
+            else:
+                score, _ = alpha_beta(state, new_board, new_hash,
+                                      depth - 1, alpha, beta, True, i == 0 and is_pv)
 
             if score < best_score:
                 best_score = score
@@ -271,6 +299,7 @@ cdef tuple alpha_beta(
 
 cpdef object iterative_deepening(object game_state, int our_team, double time_limit):
     from socha import Move, Coordinate, Direction
+    import sys
 
     init_search()
 
@@ -301,12 +330,13 @@ cpdef object iterative_deepening(object game_state, int our_team, double time_li
     cdef tuple returned_move
 
     print(f"Cython Search: {len(moves)} moves, team={our_team}")
+    sys.stdout.flush()
 
     while depth <= 30:
         try:
             score, returned_move = alpha_beta(
                 state, board, state_hash, depth,
-                -INF, INF, maximizing
+                -INF, INF, maximizing, True
             )
 
             if returned_move is not None:
@@ -316,6 +346,7 @@ cpdef object iterative_deepening(object game_state, int our_team, double time_li
             elapsed = (<double>clock() / CLOCKS_PER_SEC) - state.start_time
             nps = int(state.nodes_searched / elapsed) if elapsed > 0 else 0
             print(f"d{depth}: {score:.0f} | {state.nodes_searched}n {state.tt_hits}h {nps}nps {elapsed:.2f}s")
+            sys.stdout.flush()
 
             if abs(score) >= WIN_SCORE - 100:
                 break

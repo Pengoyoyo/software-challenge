@@ -514,18 +514,19 @@ class AlphaBetaSearch:
                 nps = int(self.nodes_searched / elapsed) if elapsed > 0 else 0
                 print(
                     f"d{depth}: {score:.0f} | {self.nodes_searched}n "
-                    f"{self.tt_hits}h {nps}nps {elapsed:.2f}s"
+                    f"{self.tt_hits}h {nps}nps {elapsed:.2f}s",
+                    flush=True
                 )
 
                 if abs(score) >= WIN_SCORE - 100:
-                    print(f"Gewinnzug bei Tiefe {depth}!")
+                    print(f"Gewinnzug bei Tiefe {depth}!", flush=True)
                     break
 
                 depth += 1
 
             except TimeoutException:
                 elapsed = time.time() - self.start_time
-                print(f"Timeout d{depth} nach {elapsed:.2f}s, {self.nodes_searched}n")
+                print(f"Timeout d{depth} nach {elapsed:.2f}s, {self.nodes_searched}n", flush=True)
                 break
 
         return best_move
@@ -542,15 +543,15 @@ class AlphaBetaLogic(IClientHandler):
         if self.our_team is None:
             self.our_team = RulesEngine.get_team_on_turn(game_state.turn)
             self.searcher = AlphaBetaSearch(self.our_team)
-            print(f"Team: {self.our_team}")
+            print(f"Team: {self.our_team}", flush=True)
 
     def calculate_move(self) -> Move:
         assert self.game_state is not None
         assert self.searcher is not None
 
-        print(f"\n=== Zug {self.game_state.turn + 1} ===")
+        print(f"\n=== Zug {self.game_state.turn + 1} ===", flush=True)
         best_move = self.searcher.iterative_deepening(self.game_state)
-        print(f"-> {best_move.start} {best_move.direction}")
+        print(f"-> {best_move.start} {best_move.direction}", flush=True)
 
         return best_move
 
