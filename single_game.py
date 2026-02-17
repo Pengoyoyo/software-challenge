@@ -234,6 +234,6 @@ if __name__ == "__main__":
     else:
         # Standard: Cython vs LMR
         bot1 = "client_cython.py"
-        bot2 = "client_optimized.py"
+        bot2 = "simon.py"
 
     run_single_game(bot1, bot2)

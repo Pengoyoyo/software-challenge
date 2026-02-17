@@ -234,3 +234,8 @@ dkms.conf
 software-challenge-server/
 *.jar
 LaTex/
+replays/
+*.zip
+my_player/
+Tournier/
+
