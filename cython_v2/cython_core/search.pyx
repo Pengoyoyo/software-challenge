@@ -10,7 +10,7 @@ from .board cimport CBoard, CMove, CMoveList, get_team, get_value, uint64, int8
 from .board cimport c_generate_moves, c_apply_move_inplace, c_undo_move, c_get_target
 from .board import from_game_state
 from .zobrist cimport c_compute_hash, c_update_hash_move, init_zobrist
-from .evaluate cimport c_evaluate, c_evaluate_with_mobility
+from .evaluate cimport c_evaluate
 
 DEF INF = 1000000.0
 DEF WIN_SCORE = 100000.0
@@ -24,6 +24,8 @@ DEF TEAM_TWO = 2
 DEF MAX_DEPTH = 40
 DEF HISTORY_CAP = 1000000
 DEF NULL_MOVE_R = 2
+DEF ENABLE_NULL_MOVE = 0
+DEF TIME_USAGE_FRACTION = 0.80
 
 cdef struct TTEntry:
     uint64 hash_key
@@ -205,22 +207,10 @@ cdef inline void order_moves_selection(CMoveList* moves, int* scores, int from_i
 
 
 cdef inline int compute_lmr_reduction(int depth, int move_num) noexcept nogil:
-    # Logarithmic LMR: more aggressive reductions for later moves
-    # Cap reduction so depth - 1 - reduction >= 0
-    cdef int r
+    # Conservative LMR for tactical stability.
     if depth < 3 or move_num < 4:
         return 0
-    if move_num < 8:
-        r = 1
-    elif move_num < 16:
-        r = 2
-    else:
-        r = 3
-    if r >= depth:
-        r = depth - 1
-    if r < 0:
-        r = 0
-    return r
+    return 1
 
 
 cdef double negamax(
@@ -302,7 +292,7 @@ cdef double negamax(
         return color * c_evaluate(board, g_our_team)
 
     # Null-move pruning
-    if allow_null and not is_pv and depth >= 3 and board.turn < 50:
+    if ENABLE_NULL_MOVE and allow_null and not is_pv and depth >= 3 and board.turn < 50:
         board.turn += 1
         null_hash = state_hash ^ 0xDEADBEEFCAFEBABEULL
         null_score = -negamax(board, null_hash,
@@ -500,7 +490,7 @@ cpdef object iterative_deepening(object game_state, int our_team, double time_li
 
         depth += 1
 
-        if elapsed > time_limit * 0.5:
+        if elapsed > time_limit * TIME_USAGE_FRACTION:
             break
 
     directions = Direction.all_directions()

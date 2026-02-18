@@ -16,8 +16,8 @@ SERVER_JAR = "software-challenge-server/server.jar"
 BASE_PORT = 13050
 PYTHON_PATH = str(Path(__file__).parent / ".venv" / "bin" / "python")
 
-NEW_BOT = str(Path(__file__).parent / "cython" / "client_cython.py")
-OLD_BOT = "/home/rasmus/Documents/Software-Challenge/cython/client_cython.py"
+NEW_BOT = str(Path(__file__).parent / "cython_v2" / "client_cython.py")
+OLD_BOT = "/home/rasmus/Documents/Software-Challenge/cython_v1/client_cython.py"
 
 
 def find_free_port(start: int = BASE_PORT) -> int:

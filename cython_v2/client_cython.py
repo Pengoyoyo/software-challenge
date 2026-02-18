@@ -1,13 +1,36 @@
 import faulthandler
 faulthandler.enable()
+import os
 
 from socha import GameState, Move, RulesEngine, TeamEnum
 from socha.api.networking.game_client import IClientHandler
 from socha.starter import Starter
 
 from cython_core.search import iterative_deepening, init_search
+from cython_core.evaluate import set_eval_params, get_eval_params
 
 TIME_LIMIT = 1.8
+
+
+def apply_env_eval_params() -> None:
+    raw = os.environ.get("CYTHON_V2_EVAL_PARAMS", "").strip()
+    if not raw:
+        return
+
+    parts = [p.strip() for p in raw.split(",")]
+    if len(parts) != 5:
+        print(
+            f"Warnung: Ungültiges CYTHON_V2_EVAL_PARAMS Format: '{raw}'",
+            flush=True,
+        )
+        return
+
+    try:
+        vals = tuple(float(p) for p in parts)
+        set_eval_params(*vals)
+        print(f"Eval-Parameter gesetzt: {get_eval_params()}", flush=True)
+    except Exception as exc:
+        print(f"Warnung: Konnte Eval-Parameter nicht setzen: {exc}", flush=True)
 
 
 class CythonLogic(IClientHandler):
@@ -44,4 +67,5 @@ if __name__ == "__main__":
     print("=" * 50)
     print("Cython-optimierter Bot gestartet")
     print("=" * 50)
+    apply_env_eval_params()
     Starter(CythonLogic())
