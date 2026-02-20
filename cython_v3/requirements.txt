@@ -1,0 +1,3 @@
+socha
+Cython>=3.0
+setuptools>=65

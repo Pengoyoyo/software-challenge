@@ -40,6 +40,12 @@ cdef struct SwarmData:
     uint64 best_swarm_mask_hi
 
 
+cdef struct TeamStats:
+    int piece_count
+    int total_value
+    int largest_value
+
+
 cdef SwarmData compute_swarm_data(CBoard board, int team) noexcept:
     cdef SwarmData data
     data.best_value = 0
@@ -141,6 +147,115 @@ cdef inline bint is_in_best_swarm(SwarmData* data, int idx) noexcept:
         return (data.best_swarm_mask_hi & (1ULL << (idx - 64))) != 0
 
 
+cdef TeamStats compute_team_stats(CBoard board, int team) noexcept:
+    cdef TeamStats data
+    data.piece_count = 0
+    data.total_value = 0
+    data.largest_value = 0
+
+    cdef bint[100] visited
+    cdef int[100] queue
+    cdef int i, idx, qfront, qback, sq, x, y, nx, ny, nidx
+    cdef int component_value, val
+    cdef int8 field
+
+    for i in range(100):
+        visited[i] = False
+
+    for idx in range(100):
+        if visited[idx]:
+            continue
+
+        field = board.fields[idx]
+        if get_team(field) != team:
+            continue
+
+        visited[idx] = True
+        queue[0] = idx
+        qfront = 0
+        qback = 1
+        component_value = 0
+
+        while qfront < qback:
+            sq = queue[qfront]
+            qfront += 1
+
+            x = sq // 10
+            y = sq - x * 10
+
+            field = board.fields[sq]
+            val = get_value(field)
+            component_value += val
+            data.total_value += val
+            data.piece_count += 1
+
+            for i in range(8):
+                nx = x + NEIGHBOR_OFFSETS[i][0]
+                ny = y + NEIGHBOR_OFFSETS[i][1]
+                if nx < 0 or nx >= 10 or ny < 0 or ny >= 10:
+                    continue
+
+                nidx = nx * 10 + ny
+                if visited[nidx]:
+                    continue
+
+                if get_team(board.fields[nidx]) == team:
+                    visited[nidx] = True
+                    queue[qback] = nidx
+                    qback += 1
+
+        if component_value > data.largest_value:
+            data.largest_value = component_value
+
+    return data
+
+
+cdef inline bint c_is_connected(CBoard board, int team) noexcept:
+    cdef TeamStats data = compute_team_stats(board, team)
+    if data.piece_count == 0:
+        return True
+    return data.largest_value == data.total_value
+
+
+cdef bint c_try_terminal_eval(CBoard board, int our_team, double* out_score) noexcept:
+    cdef int opp_team = TEAM_TWO if our_team == TEAM_ONE else TEAM_ONE
+    cdef TeamStats our_stats = compute_team_stats(board, our_team)
+    cdef TeamStats opp_stats = compute_team_stats(board, opp_team)
+
+    if our_stats.piece_count == 0 and opp_stats.piece_count > 0:
+        out_score[0] = -WIN_SCORE
+        return True
+    if opp_stats.piece_count == 0 and our_stats.piece_count > 0:
+        out_score[0] = WIN_SCORE
+        return True
+
+    if our_stats.total_value > 0 and our_stats.largest_value == our_stats.total_value:
+        out_score[0] = WIN_SCORE
+        return True
+    if opp_stats.total_value > 0 and opp_stats.largest_value == opp_stats.total_value:
+        out_score[0] = -WIN_SCORE
+        return True
+
+    if board.turn >= 60:
+        if our_stats.largest_value > opp_stats.largest_value:
+            out_score[0] = WIN_SCORE
+        elif opp_stats.largest_value > our_stats.largest_value:
+            out_score[0] = -WIN_SCORE
+        elif our_stats.total_value > opp_stats.total_value:
+            out_score[0] = WIN_SCORE
+        elif opp_stats.total_value > our_stats.total_value:
+            out_score[0] = -WIN_SCORE
+        elif our_stats.piece_count > opp_stats.piece_count:
+            out_score[0] = WIN_SCORE
+        elif opp_stats.piece_count > our_stats.piece_count:
+            out_score[0] = -WIN_SCORE
+        else:
+            out_score[0] = 0.0
+        return True
+
+    return False
+
+
 cpdef void set_eval_params(
     double best_swarm,
     double swarm_count,
@@ -189,13 +304,6 @@ cdef double c_evaluate(CBoard board, int our_team) noexcept:
     if opp_data.num_swarms == 0:
         return WIN_SCORE
 
-    if board.turn >= 60:
-        if our_data.best_value > opp_data.best_value:
-            return WIN_SCORE
-        elif opp_data.best_value > our_data.best_value:
-            return -WIN_SCORE
-        return 0.0
-
     cdef double value = 0.0
 
     value += (our_data.best_value - opp_data.best_value) * W_BEST_SWARM
@@ -204,6 +312,8 @@ cdef double c_evaluate(CBoard board, int our_team) noexcept:
 
     cdef int our_material = 0
     cdef int opp_material = 0
+    cdef int our_piece_count = 0
+    cdef int opp_piece_count = 0
     cdef int our_isolated = 0
     cdef int opp_isolated = 0
     cdef double our_dist = 0.0
@@ -225,6 +335,7 @@ cdef double c_evaluate(CBoard board, int our_team) noexcept:
 
             if t == our_team:
                 our_material += val
+                our_piece_count += 1
                 if not is_in_best_swarm(&our_data, idx):
                     dx = x - our_data.center_x
                     dy = y - our_data.center_y
@@ -232,11 +343,37 @@ cdef double c_evaluate(CBoard board, int our_team) noexcept:
                     our_isolated += val
             elif t == opp_team:
                 opp_material += val
+                opp_piece_count += 1
                 if not is_in_best_swarm(&opp_data, idx):
                     dx = x - opp_data.center_x
                     dy = y - opp_data.center_y
                     opp_dist += sqrt(dx * dx + dy * dy)
                     opp_isolated += val
+
+    if our_piece_count == 0 and opp_piece_count > 0:
+        return -WIN_SCORE
+    if opp_piece_count == 0 and our_piece_count > 0:
+        return WIN_SCORE
+
+    if our_material > 0 and our_data.best_value == our_material:
+        return WIN_SCORE
+    if opp_material > 0 and opp_data.best_value == opp_material:
+        return -WIN_SCORE
+
+    if board.turn >= 60:
+        if our_data.best_value > opp_data.best_value:
+            return WIN_SCORE
+        elif opp_data.best_value > our_data.best_value:
+            return -WIN_SCORE
+        elif our_material > opp_material:
+            return WIN_SCORE
+        elif opp_material > our_material:
+            return -WIN_SCORE
+        elif our_piece_count > opp_piece_count:
+            return WIN_SCORE
+        elif opp_piece_count > our_piece_count:
+            return -WIN_SCORE
+        return 0.0
 
     value += (our_material - opp_material) * W_MATERIAL
     value -= our_isolated * W_ISOLATED
@@ -258,12 +395,5 @@ cpdef tuple get_swarm_info(CBoard board, int team):
 
 
 cpdef bint is_terminal(CBoard board, int our_team):
-    cdef int opp_team = TEAM_TWO if our_team == TEAM_ONE else TEAM_ONE
-    cdef SwarmData our_data = compute_swarm_data(board, our_team)
-    cdef SwarmData opp_data = compute_swarm_data(board, opp_team)
-
-    if our_data.num_swarms == 0 or opp_data.num_swarms == 0:
-        return True
-    if board.turn >= 60:
-        return True
-    return False
+    cdef double terminal_score
+    return c_try_terminal_eval(board, our_team, &terminal_score)

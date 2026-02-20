@@ -1,0 +1,114 @@
+================================================================================
+GAME DEBUG LOG
+================================================================================
+Timestamp: 2026-02-19 20:58:56
+Bot ONE: cython_v2/client_cython.py
+Bot TWO: cpp_client/logic.py
+================================================================================
+
+
+================================================================================
+SERVER LOG
+================================================================================
+20:58:54.121 [main] INFO sc.server.Application -- Parsing command line arguments...
+20:58:54.124 [main] INFO sc.server.Application -- Starting Server...
+20:58:54.124 [main] DEBUG sc.server.Application -- Could not determine running version
+20:58:54.124 [main] DEBUG sc.server.Application -- Registering ShutdownHook...
+20:58:54.125 [main] WARN sc.server.Configuration -- Could not find server.properties at /home/rasmus/OC/Personal/linux/Documents/Software-Challenge/server.properties, will use default values!
+20:58:54.130 [main] ERROR sc.server.network.NewClientListener -- Could not start server on port 13050
+java.net.SocketException: Operation not permitted
+	at java.base/sun.nio.ch.Net.socket0(Native Method)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:501)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:495)
+	at java.base/sun.nio.ch.NioSocketImpl.create(NioSocketImpl.java:471)
+	at java.base/java.net.ServerSocket.getImpl(ServerSocket.java:255)
+	at java.base/java.net.ServerSocket.bind(ServerSocket.java:325)
+	at java.base/java.net.ServerSocket.<init>(ServerSocket.java:222)
+	at sc.server.network.NewClientListener.startSocketListener(NewClientListener.java:100)
+	at sc.server.network.NewClientListener.start(NewClientListener.java:80)
+	at sc.server.network.ClientManager.start(ClientManager.kt:69)
+	at sc.server.Lobby.start(Lobby.kt:22)
+	at sc.server.Application.main(Application.java:57)
+java.net.SocketException: Operation not permitted
+	at java.base/sun.nio.ch.Net.socket0(Native Method)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:501)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:495)
+	at java.base/sun.nio.ch.NioSocketImpl.create(NioSocketImpl.java:471)
+	at java.base/java.net.ServerSocket.getImpl(ServerSocket.java:255)
+	at java.base/java.net.ServerSocket.bind(ServerSocket.java:325)
+	at java.base/java.net.ServerSocket.<init>(ServerSocket.java:222)
+	at sc.server.network.NewClientListener.startSocketListener(NewClientListener.java:100)
+	at sc.server.network.NewClientListener.start(NewClientListener.java:80)
+	at sc.server.network.ClientManager.start(ClientManager.kt:69)
+	at sc.server.Lobby.start(Lobby.kt:22)
+	at sc.server.Application.main(Application.java:57)
+20:58:54.132 [ShutdownHook] INFO sc.server.ServiceManager -- Shutting down all services...
+20:58:54.132 [ShutdownHook] INFO sc.server.Application -- Exiting Application...
+
+================================================================================
+BOT ONE LOG (cython_v2/client_cython.py)
+================================================================================
+/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/starter.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+==================================================
+Cython-optimierter Bot gestartet
+==================================================
+Cython-Module geladen
+2026-02-19 20:58:56,169: INFO - Starting...
+2026-02-19 20:58:56,169: INFO - We would greatly appreciate it if you could share any issues or feature requests you may have regarding socha by either creating an issue on our GitHub repository or contributing to the project.
+(https://github.com/maxblan/socha-python-client)
+2026-02-19 20:58:56,175: WARNING - Could not check the latest version of socha due to URLError: <urlopen error [Errno -3] Temporary failure in name resolution>
+Traceback (most recent call last):
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/cython_v2/client_cython.py", line 71, in <module>
+    Starter(CythonLogic())
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/starter.py", line 98, in __init__
+    self.client = GameClient(
+                  ^^^^^^^^^^^
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/game_client.py", line 163, in __init__
+    super().__init__(host, port)
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/xml_protocol_interface.py", line 100, in __init__
+    self.connect()
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/xml_protocol_interface.py", line 125, in connect
+    self.network_interface.connect()
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/network_socket.py", line 37, in connect
+    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rasmus/.pyenv/versions/3.12.12/lib/python3.12/socket.py", line 233, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+================================================================================
+BOT TWO LOG (cpp_client/logic.py)
+================================================================================
+/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/starter.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2026-02-19 20:58:56,712: INFO - Starting...
+2026-02-19 20:58:56,712: INFO - We would greatly appreciate it if you could share any issues or feature requests you may have regarding socha by either creating an issue on our GitHub repository or contributing to the project.
+(https://github.com/maxblan/socha-python-client)
+2026-02-19 20:58:56,719: WARNING - Could not check the latest version of socha due to URLError: <urlopen error [Errno -3] Temporary failure in name resolution>
+Traceback (most recent call last):
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/cpp_client/logic.py", line 197, in <module>
+    Starter(logic=PiranhasBot())
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/starter.py", line 98, in __init__
+    self.client = GameClient(
+                  ^^^^^^^^^^^
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/game_client.py", line 163, in __init__
+    super().__init__(host, port)
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/xml_protocol_interface.py", line 100, in __init__
+    self.connect()
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/xml_protocol_interface.py", line 125, in connect
+    self.network_interface.connect()
+  File "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/.venv/lib/python3.12/site-packages/socha/api/networking/network_socket.py", line 37, in connect
+    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rasmus/.pyenv/versions/3.12.12/lib/python3.12/socket.py", line 233, in __init__
+    _socket.socket.__init__(self, family, type, proto, fileno)
+PermissionError: [Errno 1] Operation not permitted
+
+================================================================================
+SUMMARY
+================================================================================
+Winner: None
+
+Bot ONE depths: No depth info found
+Bot TWO depths: No depth info found
