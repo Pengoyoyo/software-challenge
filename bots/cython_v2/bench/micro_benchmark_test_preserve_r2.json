@@ -1,0 +1,151 @@
+{
+  "summary": {
+    "runs": 10,
+    "depth_avg": 5.7,
+    "depth_max": 6,
+    "nodes_avg": 72272.7,
+    "nps_avg": 362322.7,
+    "tt_hits_avg": 1272.9,
+    "time_limit": 0.2,
+    "preserve_tt": true,
+    "plies": [
+      0,
+      8,
+      16,
+      28,
+      40
+    ]
+  },
+  "results": [
+    {
+      "label": "p0_r1",
+      "seed": 11,
+      "plies": 0,
+      "repeat": 1,
+      "team": 1,
+      "depth": 6,
+      "score": 0.0,
+      "nodes": 72704,
+      "tt_hits": 680,
+      "nps": 358713,
+      "elapsed_s": 0.2
+    },
+    {
+      "label": "p0_r2",
+      "seed": 1008,
+      "plies": 0,
+      "repeat": 2,
+      "team": 1,
+      "depth": 6,
+      "score": 0.0,
+      "nodes": 73728,
+      "tt_hits": 1639,
+      "nps": 367476,
+      "elapsed_s": 0.2
+    },
+    {
+      "label": "p8_r1",
+      "seed": 112,
+      "plies": 8,
+      "repeat": 1,
+      "team": 1,
+      "depth": 6,
+      "score": 0.0,
+      "nodes": 76800,
+      "tt_hits": 1456,
+      "nps": 380111,
+      "elapsed_s": 0.2
+    },
+    {
+      "label": "p8_r2",
+      "seed": 1109,
+      "plies": 8,
+      "repeat": 2,
+      "team": 1,
+      "depth": 5,
+      "score": 67.0,
+      "nodes": 69074,
+      "tt_hits": 1686,
+      "nps": 366164,
+      "elapsed_s": 0.19
+    },
+    {
+      "label": "p16_r1",
+      "seed": 213,
+      "plies": 16,
+      "repeat": 1,
+      "team": 1,
+      "depth": 5,
+      "score": 0.0,
+      "nodes": 69632,
+      "tt_hits": 444,
+      "nps": 342950,
+      "elapsed_s": 0.2
+    },
+    {
+      "label": "p16_r2",
+      "seed": 1210,
+      "plies": 16,
+      "repeat": 2,
+      "team": 1,
+      "depth": 6,
+      "score": 0.0,
+      "nodes": 71680,
+      "tt_hits": 990,
+      "nps": 358374,
+      "elapsed_s": 0.2
+    },
+    {
+      "label": "p28_r1",
+      "seed": 314,
+      "plies": 28,
+      "repeat": 1,
+      "team": 1,
+      "depth": 6,
+      "score": 0.0,
+      "nodes": 72704,
+      "tt_hits": 1305,
+      "nps": 362488,
+      "elapsed_s": 0.2
+    },
+    {
+      "label": "p28_r2",
+      "seed": 1311,
+      "plies": 28,
+      "repeat": 2,
+      "team": 1,
+      "depth": 6,
+      "score": -17.0,
+      "nodes": 73045,
+      "tt_hits": 3093,
+      "nps": 375786,
+      "elapsed_s": 0.19
+    },
+    {
+      "label": "p40_r1",
+      "seed": 415,
+      "plies": 40,
+      "repeat": 1,
+      "team": 1,
+      "depth": 6,
+      "score": 0.0,
+      "nodes": 73728,
+      "tt_hits": 959,
+      "nps": 367081,
+      "elapsed_s": 0.2
+    },
+    {
+      "label": "p40_r2",
+      "seed": 1412,
+      "plies": 40,
+      "repeat": 2,
+      "team": 1,
+      "depth": 5,
+      "score": 0.0,
+      "nodes": 69632,
+      "tt_hits": 477,
+      "nps": 344084,
+      "elapsed_s": 0.2
+    }
+  ]
+}

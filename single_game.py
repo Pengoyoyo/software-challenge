@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from datetime import datetime
 
-SERVER_JAR = "software-challenge-server/server.jar"
+SERVER_JAR = "server/server.jar"
 PORT = 13050
 PYTHON_PATH = str(Path(__file__).parent / ".venv" / "bin" / "python")
 

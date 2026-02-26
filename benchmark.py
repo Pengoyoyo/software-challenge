@@ -31,7 +31,7 @@ except Exception:  # pragma: no cover - platform dependent
 
 # ========================= CONFIG =========================
 
-SERVER_JAR = Path("software-challenge-server/server.jar")
+SERVER_JAR = Path("server/server.jar")
 SAVE_FILE = Path("duel_state.json")
 RESULTS_DIR = Path("results")
 RUNS_DIR = RESULTS_DIR / "runs"
@@ -49,12 +49,17 @@ RESULT_WIN_ONE = 1
 RESULT_WIN_TWO = 2
 RESULT_DRAW = 0
 
+TURN_TIME_LIMIT = 2.0  # seconds per turn
+
 ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 SCORES_RE = re.compile(
     r"scores=\[\s*Spieler\s*1\[Siegpunkte=(\d+),\s*Schwarmgr(?:öße|oesse)=(\d+)\],\s*"
     r"Spieler\s*2\[Siegpunkte=(\d+),\s*Schwarmgr(?:öße|oesse)=(\d+)\]\s*\]",
     re.IGNORECASE,
 )
+# Patterns to detect turn time from bot logs
+# Matches: "total X.XXXs" or "calc X.XXXs" or "after X.XXX seconds"
+TURN_TIME_RE = re.compile(r"(?:total|calc|after)\s+(\d+\.?\d*)\s*s(?:econds?)?", re.IGNORECASE)
 
 PORT_RESERVE_LOCK = threading.Lock()
 RESERVED_PORTS: set[int] = set()
@@ -97,6 +102,7 @@ class BotStats:
     losses: int = 0
     draws: int = 0
     errors: int = 0
+    timeouts: int = 0
 
     @property
     def games(self) -> int:
@@ -364,9 +370,14 @@ def resolve_parallel_workers(mode: str, requested: int | None = None) -> int:
 
 
 def get_python(bot_path: Path) -> str:
+    # Check for venv in bot's directory
     venv_python = bot_path.parent / ".venv" / "bin" / "python"
     if venv_python.exists():
         return str(venv_python)
+    # Check for venv in project root
+    project_venv = Path(__file__).parent / ".venv" / "bin" / "python"
+    if project_venv.exists():
+        return str(project_venv)
     return "python3"
 
 
@@ -904,6 +915,19 @@ def read_text_if_exists(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
+def check_turn_timeouts(log_content: str) -> list[float]:
+    """Parse bot log and return list of turn times that exceeded TURN_TIME_LIMIT."""
+    violations = []
+    for match in TURN_TIME_RE.finditer(log_content):
+        try:
+            turn_time = float(match.group(1))
+            if turn_time > TURN_TIME_LIMIT:
+                violations.append(turn_time)
+        except ValueError:
+            pass
+    return violations
+
+
 def run_game(
     bot_one: BotSpec,
     bot_two: BotSpec,
@@ -945,19 +969,27 @@ def run_game(
 
         time.sleep(2.0)
 
+        # Prepare environment with PYTHONPATH for package imports
+        project_root = str(Path(__file__).parent)
+        bot_env = os.environ.copy()
+        existing_pythonpath = bot_env.get("PYTHONPATH", "")
+        bot_env["PYTHONPATH"] = f"{project_root}:{existing_pythonpath}" if existing_pythonpath else project_root
+
         bot_one_proc = subprocess.Popen(
-            [bot_one.python_exec, bot_one.path, "--port", str(port)],
+            [bot_one.python_exec, str(Path(bot_one.path).resolve()), "--port", str(port)],
             stdout=bot_one_handle,
             stderr=subprocess.STDOUT,
-            cwd=str(Path(__file__).parent),
+            cwd=str(Path(bot_one.path).resolve().parent),
+            env=bot_env,
             preexec_fn=os.setsid,
         )
         time.sleep(0.5)
         bot_two_proc = subprocess.Popen(
-            [bot_two.python_exec, bot_two.path, "--port", str(port)],
+            [bot_two.python_exec, str(Path(bot_two.path).resolve()), "--port", str(port)],
             stdout=bot_two_handle,
             stderr=subprocess.STDOUT,
-            cwd=str(Path(__file__).parent),
+            cwd=str(Path(bot_two.path).resolve().parent),
+            env=bot_env,
             preexec_fn=os.setsid,
         )
 
@@ -1142,7 +1174,7 @@ def build_results_summary_lines(path: Path, payload: dict[str, Any]) -> list[str
         "",
     ]
 
-    header = f"{'#':>2} {'Bot':<26} {'Elo':>7} {'W':>4} {'D':>4} {'L':>4} {'E':>4} {'Score':>7}"
+    header = f"{'#':>2} {'Bot':<26} {'Elo':>7} {'W':>4} {'D':>4} {'L':>4} {'E':>4} {'T':>4} {'Score':>7}"
     lines.append(header)
     lines.append("-" * len(header))
 
@@ -1157,9 +1189,10 @@ def build_results_summary_lines(path: Path, payload: dict[str, Any]) -> list[str
             draws = int(raw_bot.get("draws", 0))
             losses = int(raw_bot.get("losses", 0))
             errors = int(raw_bot.get("errors", 0))
+            timeouts = int(raw_bot.get("timeouts", 0))
             score = float(raw_bot.get("score", 0.0))
             lines.append(
-                f"{idx:>2} {name:<26} {elo:>7.1f} {wins:>4} {draws:>4} {losses:>4} {errors:>4} {score:>7.3f}"
+                f"{idx:>2} {name:<26} {elo:>7.1f} {wins:>4} {draws:>4} {losses:>4} {errors:>4} {timeouts:>4} {score:>7.3f}"
             )
             bot_rows += 1
     if bot_rows == 0:
@@ -1541,6 +1574,27 @@ def apply_match_outcome(state: RunState, outcome: MatchOutcome) -> GameRecord:
     state.game_records.append(record)
     state.next_game_idx += 1
     save_state(state)
+
+    # Check for turn time limit violations
+    if outcome.bot_one_log_path:
+        bot_one_log = read_text_if_exists(Path(outcome.bot_one_log_path))
+        violations_one = check_turn_timeouts(bot_one_log)
+        if violations_one:
+            bot_one_stats.timeouts += len(violations_one)
+            print(
+                f"⚠️  TIMEOUT: {outcome.bot_one_name} exceeded {TURN_TIME_LIMIT}s limit "
+                f"({len(violations_one)}x, max={max(violations_one):.3f}s)"
+            )
+    if outcome.bot_two_log_path:
+        bot_two_log = read_text_if_exists(Path(outcome.bot_two_log_path))
+        violations_two = check_turn_timeouts(bot_two_log)
+        if violations_two:
+            bot_two_stats.timeouts += len(violations_two)
+            print(
+                f"⚠️  TIMEOUT: {outcome.bot_two_name} exceeded {TURN_TIME_LIMIT}s limit "
+                f"({len(violations_two)}x, max={max(violations_two):.3f}s)"
+            )
+
     return record
 
 
@@ -2601,14 +2655,14 @@ def draw_curses_dashboard(
     rank_box = curses_box(stdscr, body_y, 0, body_h, left_w, "Rankings", colors["cyan"])
     if rank_box is not None:
         ranked = rank_bots(state.bots)
-        name_w = max(8, left_w - 33)
-        header_row = f"{'#':>2} {'Bot':<{name_w}} {'Elo':>7} {'W':>3} {'D':>3} {'L':>3} {'E':>3} {'Sc':>6}"
+        name_w = max(8, left_w - 37)
+        header_row = f"{'#':>2} {'Bot':<{name_w}} {'Elo':>7} {'W':>3} {'D':>3} {'L':>3} {'E':>3} {'T':>3} {'Sc':>6}"
         curses_addnstr(rank_box, 1, 1, truncate_text(header_row, left_w - 2), curses.A_BOLD)
         max_rows = max(0, body_h - 3)
         for row, bot in enumerate(ranked[:max_rows], start=2):
             line = (
                 f"{row - 1:>2} {truncate_text(bot.name, name_w):<{name_w}} {bot.elo:>7.1f} "
-                f"{bot.wins:>3} {bot.draws:>3} {bot.losses:>3} {bot.errors:>3} {bot.score:>6.3f}"
+                f"{bot.wins:>3} {bot.draws:>3} {bot.losses:>3} {bot.errors:>3} {bot.timeouts:>3} {bot.score:>6.3f}"
             )
             curses_addnstr(rank_box, row, 1, truncate_text(line, left_w - 2))
 
@@ -2622,6 +2676,7 @@ def draw_curses_dashboard(
     if overview_box is not None:
         draws = sum(bot.draws for bot in state.bots) // 2
         errors = sum(bot.errors for bot in state.bots) // 2
+        timeouts = sum(bot.timeouts for bot in state.bots) // 2
         decisive = done - draws - errors
         lines = [
             f"Bots      : {len(state.bots)}",
@@ -2633,6 +2688,7 @@ def draw_curses_dashboard(
             meter_line_plain("Decisive", decisive, max(done, 1), max(10, right_w - 20)),
             meter_line_plain("Draws", draws, max(done, 1), max(10, right_w - 20)),
             meter_line_plain("Errors", errors, max(done, 1), max(10, right_w - 20)),
+            meter_line_plain("Timeouts", timeouts, max(done, 1), max(10, right_w - 20)),
         ]
         for row, line in enumerate(lines[: max(0, overview_h - 2)], start=1):
             curses_addnstr(overview_box, row, 1, truncate_text(line, right_w - 2))
@@ -2882,17 +2938,18 @@ def render_plain_dashboard(
     lines: list[str] = [truncate_text(header, width), ""]
 
     ranked = rank_bots(state.bots)
-    rank_lines = [f"{'#':>2} {'Bot':<28} {'Elo':>7} {'W':>3} {'D':>3} {'L':>3} {'E':>3} {'Sc':>6}"]
+    rank_lines = [f"{'#':>2} {'Bot':<28} {'Elo':>7} {'W':>3} {'D':>3} {'L':>3} {'E':>3} {'T':>3} {'Sc':>6}"]
     for idx, bot in enumerate(ranked, start=1):
         rank_lines.append(
             f"{idx:>2} {truncate_text(bot.name, 28):<28} {bot.elo:>7.1f} "
-            f"{bot.wins:>3} {bot.draws:>3} {bot.losses:>3} {bot.errors:>3} {bot.score:>6.3f}"
+            f"{bot.wins:>3} {bot.draws:>3} {bot.losses:>3} {bot.errors:>3} {bot.timeouts:>3} {bot.score:>6.3f}"
         )
     lines.extend(boxed("Rankings", rank_lines, width))
     lines.append("")
 
     draws = sum(bot.draws for bot in state.bots) // 2
     errors = sum(bot.errors for bot in state.bots) // 2
+    timeouts = sum(bot.timeouts for bot in state.bots) // 2
     decisive = done - draws - errors
     overview = [
         f"Bots      : {len(state.bots)}",
@@ -2904,6 +2961,7 @@ def render_plain_dashboard(
         meter_line_plain("Decisive", decisive, max(done, 1)),
         meter_line_plain("Draws", draws, max(done, 1)),
         meter_line_plain("Errors", errors, max(done, 1)),
+        meter_line_plain("Timeouts", timeouts, max(done, 1)),
     ]
     lines.extend(boxed("Overview", overview, width))
     lines.append("")

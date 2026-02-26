@@ -231,11 +231,12 @@ dkms.conf
 
 
 # Software Challenge specific
-software-challenge-server/
+server/
 *.jar
-LaTex/
+docs/
 replays/
 *.zip
-my_player/
-Tournier/
-cpp_client/
+bots/my_player/
+logs/old_tournament/
+bots/cpp/
+debug/

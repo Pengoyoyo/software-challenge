@@ -1,0 +1,16 @@
+[package]
+name = "piranhas-bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+socha = { git = "https://github.com/simoncreates/socha.git" }
+log = "0.4"
+simple-logging = "2.0"
+chrono = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"

@@ -1,0 +1,18 @@
+[package]
+name = "crackedline_piranhas"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "crackedline_piranhas"
+path = "src/lib.rs"
+
+[[bin]]
+name = "piranhas-rs-engine"
+path = "src/main.rs"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"

@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 # ============================================================================
 
 GAMES_PER_MATCHUP = 8  # Spiele pro Paarung (hin und rück)
-SERVER_JAR = "software-challenge-server/server.jar"
+SERVER_JAR = "server/server.jar"
 BASE_PORT = 13050
 PYTHON_PATH = str(Path(__file__).parent / ".venv" / "bin" / "python")
 RESULTS_FILE = "tournament_results.json"

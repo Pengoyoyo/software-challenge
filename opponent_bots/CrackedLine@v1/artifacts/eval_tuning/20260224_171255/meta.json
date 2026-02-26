@@ -1,0 +1,17 @@
+{
+  "binary": "/home/simon/Desktop/python/SoftwareChallenge/bots/CrackedLine@v1/target/release/piranhas-rs-engine",
+  "seed": 41,
+  "tt_mb": 1024,
+  "move_budget_ms": 90,
+  "max_plies": 60,
+  "iterations_a": 2,
+  "iterations_b": 1,
+  "games_per_eval_a": 2,
+  "games_per_eval_b": 2,
+  "dry_run": true,
+  "baseline_weights": "/home/simon/Desktop/python/SoftwareChallenge/bots/CrackedLine@v1/artifacts/eval_tuning/20260224_171255/baseline.weights",
+  "final_weights": "/home/simon/Desktop/python/SoftwareChallenge/bots/CrackedLine@v1/artifacts/eval_tuning/20260224_171255/final.weights",
+  "best_weights": "/home/simon/Desktop/python/SoftwareChallenge/bots/CrackedLine@v1/artifacts/eval_tuning/20260224_171255/best.weights",
+  "stage_a_best_score": 0.5768007888528618,
+  "stage_b_best_score": 0.47265122308965224
+}
