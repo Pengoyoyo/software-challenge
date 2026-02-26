@@ -1,14 +1,14 @@
 # Software-Challenge 2026 - Piranhas Bot Workspace
 
-Diese Codebase ist ein lokales Entwicklungs- und Benchmark-Workspace fuer mehrere Piranhas-Bot-Implementierungen:
+Diese Codebase ist ein lokales Entwicklungs- und Benchmark-Workspace für mehrere Piranhas-Bot-Implementierungen:
 
-- Python (mehrere Alpha-Beta Varianten)
+- Python (mehrere Alpha-Beta-Varianten)
 - Cython (`cython_v1`, `cython_v2`, `cython_v3`)
 - Rust (`bots/rust`)
 - C++/pybind11 Hybrid (`bots/cpp`)
 - externe Vergleichsgegner (`opponent_bots/*`)
 
-Der zentrale Runner fuer Duelle und Turniere ist `benchmark.py` (interaktives Text-/Curses-Menue, Resume, Result-Viewer, Logs).
+Der zentrale Runner für Duelle und Turniere ist `benchmark.py` (interaktives Text-/Curses-Menü, Resume, Result-Viewer, Logs).
 
 ## Inhalt
 
@@ -29,9 +29,9 @@ Der zentrale Runner fuer Duelle und Turniere ist `benchmark.py` (interaktives Te
 ### Voraussetzungen
 
 - Python `3.12` (siehe `.python-version`)
-- Java Runtime (fuer `server/server.jar`)
-- optional: Rust Toolchain (`cargo`) fuer `bots/rust`, `bots/cython_v3`, `bots/cpp`
-- optional: C/C++ Toolchain + Cython fuer native Erweiterungen
+- Java Runtime (für `server/server.jar`)
+- optional: Rust Toolchain (`cargo`) für `bots/rust`, `bots/cython_v3`, `bots/cpp`
+- optional: C/C++ Toolchain + Cython für native Erweiterungen
 
 ### Basis-Setup
 
@@ -47,19 +47,19 @@ python3 -m venv .venv
 .venv/bin/python benchmark.py
 ```
 
-`benchmark.py` startet ein Menue, findet Bots rekursiv im Workspace und kann neue Runs starten oder alte fortsetzen.
+`benchmark.py` startet ein Menü, findet Bots rekursiv im Workspace und kann neue Runs starten oder alte fortsetzen.
 
 ## Repository-Struktur
 
 ```text
 .
-|- benchmark.py                  # zentraler duel/tournament runner (TUI + plain)
+|- benchmark.py                  # zentraler Duell/Tournament-Runner (TUI + plain)
 |- single_game.py                # einzelnes Match mit Live-Bot-Logs (legacy)
-|- tournament.py                 # einfacher round-robin runner (legacy)
+|- tournament.py                 # einfacher Round-Robin-Runner (legacy)
 |- scripts/
-|  |- ga_optimize_v2.py          # GA fuer cython_v2 eval weights
-|  |- run_unattended_ga.py       # long-run wrapper um GA
-|  |- tournament_new_vs_old.py   # direktvergleich cython_v2 vs cython_v1
+|  |- ga_optimize_v2.py          # GA für cython_v2 eval weights
+|  |- run_unattended_ga.py       # Long-Run-Wrapper um GA
+|  |- tournament_new_vs_old.py   # Direktvergleich cython_v2 vs cython_v1
 |  `- package_bots.py            # erzeugt submission_*.zip
 |- bots/
 |  |- python/
@@ -68,33 +68,33 @@ python3 -m venv .venv
 |  |- cython_v3/
 |  |- rust/
 |  |- cpp/
-|  `- my_player/                 # lokales packaged bot layout
-|- opponent_bots/                # externe bots/wrapper
-|- server/                       # game server jars + config
-|- results/                      # summary jsons + run artefakte
-|- replays/                      # replay xml/xml.gz
-|- logs/                         # server logs
-|- docs/                         # latex report
-|- duel_state.json               # resumable run state (benchmark.py)
-`- custom_bot_paths.json         # persistente custom bot entrypoints
+|  `- my_player/                 # lokales packaged Bot-Layout
+|- opponent_bots/                # externe Bots/Wrapper
+|- server/                       # Game-Server-JARs + Config
+|- results/                      # Summary-JSONs + Run-Artefakte
+|- replays/                      # Replay-XML/XML.GZ
+|- logs/                         # Server-Logs
+|- docs/                         # LaTeX-Report
+|- duel_state.json               # resumefähiger Run-State (benchmark.py)
+`- custom_bot_paths.json         # persistente Custom-Bot-Einstiegspunkte
 ```
 
 ## Haupt-Workflow: benchmark.py
 
-`benchmark.py` ist der Standard-Einstieg fuer lokale Evaluierung.
+`benchmark.py` ist der Standard-Einstieg für lokale Evaluierung.
 
 ### Was der Runner kann
 
 - Modus `duel` (genau 2 Bots) oder `tournament` (>=2 Bots)
 - rekursive Bot-Erkennung im aktuellen Workspace
-- manuelles Hinzufuegen/Entfernen von Custom-Bot-Dateien (`.py`)
-- side switching in beiden Modi (fairness)
-- parallele Ausfuehrung mit mehreren Workern
+- manuelles Hinzufügen/Entfernen von Custom-Bot-Dateien (`.py`)
+- Side Switching in beiden Modi (Fairness)
+- parallele Ausführung mit mehreren Workern
 - robuste Gewinnererkennung aus Server- und Bot-Logs
-- ELO-Tracking (K=32), W/L/D/Error/Timeout Stats
-- live Dashboard (curses bei TTY, sonst plain text)
-- persistenter Resume ueber `duel_state.json`
-- Result-Viewer fuer fruehere Runs
+- ELO-Tracking (K=32), W/L/D/Error/Timeout-Stats
+- Live-Dashboard (Curses bei TTY, sonst plain text)
+- persistenter Resume über `duel_state.json`
+- Result-Viewer für frühere Runs
 
 ### Bot Discovery
 
@@ -112,23 +112,23 @@ Der Scanner ignoriert u.a.:
 
 Bei jedem Run werden geschrieben:
 
-- `duel_state.json` (state + progress, resume-faehig)
+- `duel_state.json` (State + Progress, resumefähig)
 - `results/runs/<run_id>/summary.json`
 - `results/runs/<run_id>/logs/game_<idx>_{server|bot_one|bot_two}.log`
-- zusaetzlich latest summary:
+- zusätzlich Latest Summary:
   - `results/duel_results.json` oder
   - `results/tournament_results.json`
 
 ### Wichtige Defaults im Runner
 
 - Base Port: `16000`
-- Port step pro Spiel: `10`
+- Port-Schritt pro Spiel: `10`
 - Spiel-Timeout: `300s`
 - Turn-Timeout-Detection aus Bot-Logs: `2.0s`
 - Worker:
-  - duel: default `1`
-  - tournament: default `min(4, cpu_count)`
-  - optional override ueber `DUEL_WORKERS`
+  - Duell: default `1`
+  - Tournament: default `min(4, cpu_count)`
+  - optional Override über `DUEL_WORKERS`
 
 ## Bot-Implementierungen
 
@@ -141,24 +141,24 @@ Mehrere reine Python-Referenzbots:
 - `client_optimized.py`: optimierte AB-Variante mit Zeitmanagement
 - `client_alt.py`, `simon.py`: einfachere Baselines
 
-Alle laufen ueber `socha.starter.Starter(...)`.
+Alle laufen über `socha.starter.Starter(...)`.
 
 ## `bots/cython_v1`
 
 - Cython-Kern mit `board/evaluate/search/zobrist`
 - Entry: `client_cython.py`
-- Build ueber `setup.py build_ext --inplace`
+- Build über `setup.py build_ext --inplace`
 
 ## `bots/cython_v2`
 
 Wie `v1`, plus runtime-gewichtete Evaluation:
 
 - Entry: `client_cython.py`
-- Baseline ohne env-weights: `client_cython_baseline.py`
+- Baseline ohne Env-Weights: `client_cython_baseline.py`
 - Build: `setup.py build_ext --inplace`
 - Microbench: `micro_benchmark.py`
 
-Environment-Parameter fuer Eval:
+Environment-Parameter für Eval:
 
 ```bash
 CYTHON_V2_EVAL_PARAMS="17.74,3.0,2.0,4.0,0.63"
@@ -171,14 +171,14 @@ Format: 5 Float-Werte.
 Hybrid aus Python/Cython-Bridge und Rust-Core:
 
 - Rust Lib: `rust_core` (`librust_core.so`)
-- Python bridge: `cython_core/bridge.py`
-- optionale Cython bridge: `cython_core/bridge_cy.pyx`
+- Python Bridge: `cython_core/bridge.py`
+- optionale Cython Bridge: `cython_core/bridge_cy.pyx`
 - Entry: `client_cython.py`
 - festes Zeitbudget: `1700ms` pro Zug
 
 Hilfsskripte:
 
-- `build.sh` (rust + cython)
+- `build.sh` (Rust + Cython)
 - `build_rust.sh`
 - `prepare_submission.sh`
 - `start.sh`, `run_client.sh`
@@ -188,21 +188,21 @@ Hilfsskripte:
 Reiner Rust-Bot:
 
 - Binary: `target/release/piranhas-bot`
-- Wrapper fuer pythonbasierte Runner: `pur_rust_client.py`
+- Wrapper für Python-basierte Runner: `pur_rust_client.py`
 - `start.sh` baut automatisch neu, falls Quellen neuer sind
-- CLI Parsing in Rust: `-h/--host`, `-p/--port`, `-r/--reservation`
+- CLI-Parsing in Rust: `-h/--host`, `-p/--port`, `-r/--reservation`
 
 ## `bots/cpp`
 
 Hybridbot mit nativer C++ Engine (pybind11) + Python Fallback:
 
-- Packaging/Build ueber `pyproject.toml` + `scikit-build-core`
+- Packaging/Build über `pyproject.toml` + `scikit-build-core`
 - Entry: `logic.py`
-- Native Modul: `_piranhas_core.*.so`
+- Natives Modul: `_piranhas_core.*.so`
 - umfangreiche Tests unter `tests/`
 - Bench und Tuning unter `bench/` und `scripts/`
 
-Wichtige Runtime-Flags (env):
+Wichtige Runtime-Flags (Env):
 
 - `PIRANHAS_MOVE_HARD_CAP_NS`
 - `PIRANHAS_RETURN_RESERVE_NS`
@@ -216,7 +216,7 @@ Externe Vergleichsgegner inkl. Wrapper:
 - `CrackedLine@v1/run.py`
 - `CrackedLine@razzzzzer/run.py`
 
-Diese Pfade koennen in `custom_bot_paths.json` hinterlegt und im `benchmark.py` Menue direkt selektiert werden.
+Diese Pfade können in `custom_bot_paths.json` hinterlegt und im `benchmark.py`-Menü direkt selektiert werden.
 
 ## Build-Anleitungen
 
@@ -244,14 +244,14 @@ cd bots/cython_v3
 ./build.sh
 ```
 
-## Rust bot
+## Rust Bot
 
 ```bash
 cd bots/rust
 cargo build --release
 ```
 
-## C++ bot
+## C++ Bot
 
 ```bash
 cd bots/cpp
@@ -280,7 +280,7 @@ java -jar server/server.jar --port 13050
 
 ## Training und Optimierung
 
-## 1) Direktvergleich alt vs neu
+## 1) Direktvergleich alt vs. neu
 
 ```bash
 .venv/bin/python scripts/tournament_new_vs_old.py 50
@@ -288,18 +288,18 @@ java -jar server/server.jar --port 13050
 
 Spielt `bots/cython_v2/client_cython.py` gegen `bots/cython_v1/client_cython.py` mit Seitenwechsel.
 
-## 2) GA fuer `cython_v2` Eval-Gewichte
+## 2) GA für `cython_v2` Eval-Gewichte
 
 Script: `scripts/ga_optimize_v2.py`
 
 Kerneigenschaften:
 
 - optimiert 5 Gewichte (`best_swarm, swarm_count, material, isolated, distance`)
-- Gegnerliste standardmaessig:
+- Gegnerliste standardmäßig:
   - `bots/cython_v1/client_cython.py`
   - `bots/python/client_optimized.py`
-- checkpoint/resume support
-- Bewertung ueber W/L/D/E aus echten Spielen
+- Checkpoint/Resume-Support
+- Bewertung über W/L/D/E aus echten Spielen
 
 Beispiel:
 
@@ -327,13 +327,13 @@ Script: `scripts/run_unattended_ga.py`
 
 Highlights:
 
-- chunked GA runs mit retries
-- lock file gegen doppelte Instanzen
-- live status:
+- Chunked GA-Runs mit Retries
+- Lock-File gegen doppelte Instanzen
+- Live-Status:
   - JSON: `<log-dir>/progress_live.json`
   - Text: `<log-dir>/progress_live.txt`
-- optional finale Validierung gegen Gegnerliste
-- dynamische Gegnerliste aus Datei (waehrend Lauf editierbar)
+- optionale finale Validierung gegen Gegnerliste
+- dynamische Gegnerliste aus Datei (während Lauf editierbar)
 
 Beispiel:
 
@@ -355,7 +355,7 @@ Stoppen:
 touch log/ga_longrun/STOP
 ```
 
-## 4) Micro-Benchmark fuer `cython_v2`
+## 4) Micro-Benchmark für `cython_v2`
 
 ```bash
 cd bots/cython_v2
@@ -380,7 +380,7 @@ cd bots/cpp
 
 ## Zentrale Sammel-Paketierung
 
-`scripts/package_bots.py` erstellt mehrere `submission_*.zip` Dateien in `submissions/`:
+`scripts/package_bots.py` erstellt mehrere `submission_*.zip`-Dateien in `submissions/`:
 
 - `submission_cython_v1.zip`
 - `submission_cython_v2.zip`
@@ -388,11 +388,11 @@ cd bots/cpp
 - `submission_cpp_client.zip`
 - `submission_rust_bot.zip`
 
-Script nutzt u.a.:
+Das Script nutzt u.a.:
 
 - Wheels aus `submissions/my_player.zip`
 - gebaute Artefakte aus `bots/cython_v3` und `bots/cpp`
-- `cargo build --release` fuer `bots/rust`
+- `cargo build --release` für `bots/rust`
 
 Aufruf:
 
@@ -409,13 +409,13 @@ cd bots/cython_v3
 
 ## Ergebnisse, Status, Artefakte
 
-- `duel_state.json`: aktueller/letzter Run-State fuer Resume
-- `custom_bot_paths.json`: persistente manuell hinzugefuegte Bot-Dateipfade
-- `results/runs/<run_id>/summary.json`: kompletter Runreport
-- `results/runs/<run_id>/logs/`: pro Spiel server/bot logs
-- `results/duel_results.json`, `results/tournament_results.json`: latest snapshots
-- `logs/`: sonstige Serverlogs
-- `replays/`: Replay XML/XML.GZ
+- `duel_state.json`: aktueller/letzter Run-State für Resume
+- `custom_bot_paths.json`: persistente manuell hinzugefügte Bot-Dateipfade
+- `results/runs/<run_id>/summary.json`: kompletter Run-Report
+- `results/runs/<run_id>/logs/`: pro Spiel Server-/Bot-Logs
+- `results/duel_results.json`, `results/tournament_results.json`: Latest Snapshots
+- `logs/`: sonstige Server-Logs
+- `replays/`: Replay-XML/XML.GZ
 
 ## Legacy-Skripte
 
@@ -423,7 +423,7 @@ cd bots/cython_v3
 
 - startet Server + 2 Bots
 - zeigt Bot-Ausgaben live
-- schreibt am Ende eine zusammengefuehrte Debug-Datei (`game_debug_<timestamp>.txt`)
+- schreibt am Ende eine zusammengeführte Debug-Datei (`game_debug_<timestamp>.txt`)
 
 Aufruf:
 
@@ -431,17 +431,17 @@ Aufruf:
 .venv/bin/python single_game.py <bot1.py> <bot2.py>
 ```
 
-Hinweis: Standardwerte im Skript (`client_cython.py`, `simon.py`) sind historisch und passen nicht zur aktuellen `bots/*` Struktur ohne Pfadangabe.
+Hinweis: Standardwerte im Skript (`client_cython.py`, `simon.py`) sind historisch und passen ohne Pfadangabe nicht zur aktuellen `bots/*`-Struktur.
 
 ## `tournament.py`
 
-Einfacher round-robin Runner, der `client*.py` im Repository-Root sucht. Ebenfalls eher historisch im Vergleich zu `benchmark.py`.
+Einfacher Round-Robin-Runner, der `client*.py` im Repository-Root sucht. Ebenfalls eher historisch im Vergleich zu `benchmark.py`.
 
 ## Troubleshooting
 
 ## `spawn_failed` oder Python nicht gefunden
 
-Sicherstellen, dass `.venv` existiert und Commands ueber `.venv/bin/python` laufen.
+Sicherstellen, dass `.venv` existiert und Commands über `.venv/bin/python` laufen.
 
 ## Rust-Library fehlt (`librust_core.so`)
 
@@ -450,22 +450,22 @@ cd bots/cython_v3
 ./build_rust.sh
 ```
 
-## Lock aktiv bei unattended GA
+## Lock aktiv bei Unattended GA
 
 Fehler: `Lock active: <checkpoint>.lock`
 
-- laufenden Prozess pruefen
-- nur wenn sicher kein Prozess laeuft: lock datei loeschen
+- laufenden Prozess prüfen
+- nur wenn sicher kein Prozess läuft: Lock-Datei löschen
 
-## Keine Bots im benchmark Menue gefunden
+## Keine Bots im Benchmark-Menü gefunden
 
 - Bot muss `.py` sein
-- Starter/IClientHandler Marker muessen im Code erkennbar sein
-- sonst ueber `a` (custom path) manuell hinzufuegen
+- Starter/IClientHandler-Marker müssen im Code erkennbar sein
+- sonst über `a` (Custom Path) manuell hinzufügen
 
 ## Gewinner nicht eindeutig erkannt
 
-Der Runner faellt auf mehrere Parsing-Regeln und Score-Tiebreaks zurueck. Bei unklaren Faellen `results/runs/<run_id>/logs/*` pruefen.
+Der Runner fällt auf mehrere Parsing-Regeln und Score-Tiebreaks zurück. Bei unklaren Fällen `results/runs/<run_id>/logs/*` prüfen.
 
 ## Command Cheat Sheet
 
@@ -473,15 +473,15 @@ Der Runner faellt auf mehrere Parsing-Regeln und Score-Tiebreaks zurueck. Bei un
 # Basis
 .venv/bin/pip install -r requirements.txt
 
-# Haupt-runner
+# Haupt-Runner
 .venv/bin/python benchmark.py
 
-# cython builds
+# Cython Builds
 (cd bots/cython_v1 && ../../.venv/bin/python setup.py build_ext --inplace)
 (cd bots/cython_v2 && ../../.venv/bin/python setup.py build_ext --inplace)
 (cd bots/cython_v3 && ./build.sh)
 
-# rust + cpp
+# Rust + C++
 (cd bots/rust && cargo build --release)
 (cd bots/cpp && ../../.venv/bin/pip install -e .)
 
@@ -489,13 +489,13 @@ Der Runner faellt auf mehrere Parsing-Regeln und Score-Tiebreaks zurueck. Bei un
 .venv/bin/python scripts/ga_optimize_v2.py --help
 .venv/bin/python scripts/run_unattended_ga.py --help
 
-# packaging
+# Packaging
 .venv/bin/python scripts/package_bots.py
 ```
 
 ## Dokumentation im Repo
 
-- `bots/cpp/README.md` fuer nativen C++ Bot (Setup, Tests, Bench, Tuning)
-- `bots/cython_v3/README.md` fuer Rust-Bridge Bot
-- `scripts/SERVER_LONGRUN_GA_GUIDE.md` fuer serverorientierten long-run Ablauf
-- `docs/` fuer den LaTeX-Bericht (`docs/build.sh`, `docs/makefile`)
+- `bots/cpp/README.md` für den nativen C++ Bot (Setup, Tests, Bench, Tuning)
+- `bots/cython_v3/README.md` für den Rust-Bridge-Bot
+- `scripts/SERVER_LONGRUN_GA_GUIDE.md` für den serverorientierten Long-Run-Ablauf
+- `docs/` für den LaTeX-Bericht (`docs/build.sh`, `docs/makefile`)
