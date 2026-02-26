@@ -1,0 +1,6 @@
+# Opponents for run_unattended_ga.py
+# One path per line, absolute or relative to repo root.
+cython_v1/client_cython.py
+cython_v2/client_cython_baseline.py
+# /absolute/path/to/third_bot.py
+/home/server/Software-Challenge-GA/bots/client_optimized.py

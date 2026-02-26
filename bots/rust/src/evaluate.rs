@@ -1,28 +1,100 @@
 use crate::board::{
     get_tables, opponent, piece_owner, MoveList, Position, ONE, TWO,
 };
+use std::sync::OnceLock;
 
 // ─── Score constants ──────────────────────────────────────────────────────────
 pub const WIN_SCORE: i32 = 1_000_000;
 pub const MATE_SCORE: i32 = 900_000;
 
 // ─── Evaluation weights ───────────────────────────────────────────────────────
-// Deviations from C++ are intentional; see plan for rationale.
-const W_LARGEST: i32 = 380;
-const W_COMPONENTS: i32 = 260;
-const W_SPREAD: i32 = 50;
-const W_MATERIAL: i32 = 130;
-const W_LINKS: i32 = 15;
-const W_CENTER: i32 = 4;
-const W_MOBILITY: i32 = 7;
+#[derive(Clone, Copy)]
+struct EvalWeights {
+    w_largest: i32,
+    w_components: i32,
+    w_spread: i32,
+    w_material: i32,
+    w_links: i32,
+    w_center: i32,
+    w_mobility: i32,
+    w_late_largest: i32,
+    w_late_components: i32,
+    w_late_spread: i32,
+    w_late_links: i32,
+    w_late_mobility: i32,
+    connect_bonus: i32,
+}
 
-const W_LATE_LARGEST: i32 = 180;
-const W_LATE_COMPONENTS: i32 = 130;
-const W_LATE_SPREAD: i32 = 90;
-const W_LATE_LINKS: i32 = 20;
-const W_LATE_MOBILITY: i32 = 12;
+const DEFAULT_WEIGHTS: EvalWeights = EvalWeights {
+    // Deviations from C++ are intentional; see plan for rationale.
+    w_largest: 380,
+    w_components: 260,
+    w_spread: 50,
+    w_material: 130,
+    w_links: 15,
+    w_center: 4,
+    w_mobility: 7,
+    w_late_largest: 180,
+    w_late_components: 130,
+    w_late_spread: 90,
+    w_late_links: 20,
+    w_late_mobility: 12,
+    connect_bonus: 85_000,
+};
 
-const CONNECT_BONUS: i32 = 85_000;
+static EVAL_WEIGHTS: OnceLock<EvalWeights> = OnceLock::new();
+
+fn parse_weights_list(raw: &str) -> Option<EvalWeights> {
+    let parts: Vec<&str> = raw
+        .split(',')
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .collect();
+    if parts.len() != 13 {
+        return None;
+    }
+
+    let mut vals = [0i32; 13];
+    for (i, p) in parts.iter().enumerate() {
+        let v = p.parse::<f64>().ok()?;
+        if !v.is_finite() {
+            return None;
+        }
+        vals[i] = v.round() as i32;
+    }
+
+    Some(EvalWeights {
+        w_largest: vals[0],
+        w_components: vals[1],
+        w_spread: vals[2],
+        w_material: vals[3],
+        w_links: vals[4],
+        w_center: vals[5],
+        w_mobility: vals[6],
+        w_late_largest: vals[7],
+        w_late_components: vals[8],
+        w_late_spread: vals[9],
+        w_late_links: vals[10],
+        w_late_mobility: vals[11],
+        connect_bonus: vals[12],
+    })
+}
+
+fn load_eval_weights() -> EvalWeights {
+    for key in ["PIRANHAS_RS_EVAL_WEIGHTS", "RUST_EVAL_WEIGHTS"] {
+        if let Ok(raw) = std::env::var(key) {
+            if let Some(parsed) = parse_weights_list(&raw) {
+                return parsed;
+            }
+        }
+    }
+    DEFAULT_WEIGHTS
+}
+
+#[inline]
+fn eval_weights() -> &'static EvalWeights {
+    EVAL_WEIGHTS.get_or_init(load_eval_weights)
+}
 
 // ─── Terminal score at turn >= 60 ─────────────────────────────────────────────
 
@@ -148,6 +220,7 @@ pub fn has_one_move_connect(pos: &mut Position, player: u8, max_checks: usize) -
 // ─── Main evaluation ─────────────────────────────────────────────────────────
 
 pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
+    let w = eval_weights();
     let opp = opponent(perspective);
 
     // Terminal: game over at turn 60
@@ -243,34 +316,34 @@ pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
     }
 
     let mut score = 0i32;
-    score += W_LARGEST * (own_largest - opp_largest);
-    score += W_COMPONENTS * (opp_components - own_components);
-    score += W_SPREAD * (opp_spread - own_spread);
-    score += W_MATERIAL * (own_total - opp_total);
-    score += W_LINKS * (own_links - opp_links);
-    score += W_CENTER * (own_center - opp_center);
+    score += w.w_largest * (own_largest - opp_largest);
+    score += w.w_components * (opp_components - own_components);
+    score += w.w_spread * (opp_spread - own_spread);
+    score += w.w_material * (own_total - opp_total);
+    score += w.w_links * (own_links - opp_links);
+    score += w.w_center * (own_center - opp_center);
 
     if need_mobility {
-        score += W_MOBILITY * (own_mobility - opp_mobility);
+        score += w.w_mobility * (own_mobility - opp_mobility);
     }
 
     if late_phase {
-        score += W_LATE_LARGEST * (own_largest - opp_largest);
-        score += W_LATE_COMPONENTS * (opp_components - own_components);
-        score += W_LATE_SPREAD * (opp_spread - own_spread);
-        score += W_LATE_LINKS * (own_links - opp_links);
+        score += w.w_late_largest * (own_largest - opp_largest);
+        score += w.w_late_components * (opp_components - own_components);
+        score += w.w_late_spread * (opp_spread - own_spread);
+        score += w.w_late_links * (own_links - opp_links);
         if need_mobility {
-            score += W_LATE_MOBILITY * (own_mobility - opp_mobility);
+            score += w.w_late_mobility * (own_mobility - opp_mobility);
         }
 
         if allow_expensive && own_components <= 2 && own_count <= 8 {
             if has_one_move_connect(pos, perspective, 6) {
-                score += CONNECT_BONUS;
+                score += w.connect_bonus;
             }
         }
         if allow_expensive && opp_components <= 2 && opp_count <= 8 {
             if has_one_move_connect(pos, opp, 6) {
-                score -= CONNECT_BONUS;
+                score -= w.connect_bonus;
             }
         }
     }

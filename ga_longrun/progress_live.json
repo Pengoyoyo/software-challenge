@@ -1,0 +1,55 @@
+{
+  "state": "finished",
+  "pid": 10574,
+  "started_at": "2026-02-18T18:59:12",
+  "uptime_hms": "133:54:53",
+  "checkpoint": "/home/server/Software-Challenge-GA/ga_v2_longrun_checkpoint.json",
+  "checkpoint_generation": 49,
+  "chunk_index": 10,
+  "chunk_range": "45..49",
+  "retries": 0,
+  "max_retries": 999999,
+  "active_opponents": [
+    "/home/server/Software-Challenge-GA/cython_v1/client_cython.py",
+    "/home/server/Software-Challenge-GA/cython_v2/client_cython_baseline.py",
+    "/home/server/Software-Challenge-GA/bots/client_optimized.py"
+  ],
+  "last_line": "Best fitness: +0.9167",
+  "latest_eval": {
+    "idx": 16,
+    "total": 16,
+    "fitness": 0.8333,
+    "wins": 5,
+    "losses": 1,
+    "draws": 0,
+    "errors": 0,
+    "weights": "14.38232757,2.38038079,4.211739579,2.964444952,0.5055394367"
+  },
+  "latest_best": {
+    "generation": 49,
+    "fitness": 0.9167,
+    "wins": 5,
+    "losses": 0,
+    "draws": 1,
+    "errors": 0,
+    "weights": "18.30426819,2.338011017,4.0585724,2.505749773,0.4874924205"
+  },
+  "completed_chunks": 10,
+  "progress_file": "/home/server/Software-Challenge-GA/log/ga_longrun/progress_live.json",
+  "status_file": "/home/server/Software-Challenge-GA/log/ga_longrun/progress_live.txt",
+  "analysis_file": "/home/server/Software-Challenge-GA/log/ga_longrun/final_analysis.md",
+  "opponents_file": "/home/server/Software-Challenge-GA/log/ga_longrun/opponents.txt",
+  "chunk_log_file": "/home/server/Software-Challenge-GA/log/ga_longrun/chunk_0010_from_45_to_49_20260223_172349.log",
+  "current_generation": 49,
+  "last_chunk_rc": 0,
+  "validation": {
+    "state": "done",
+    "games_total": 60,
+    "games_done": 60,
+    "wins": 35,
+    "losses": 24,
+    "draws": 1,
+    "errors": 0
+  },
+  "finished_at": "2026-02-24T08:54:06"
+}

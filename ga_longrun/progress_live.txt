@@ -1,0 +1,18 @@
+time: 2026-02-24T08:54:06
+state: finished
+pid: 10574
+uptime: 133:54:53
+checkpoint_generation: 49
+chunk: 10 (45..49)
+retries: 0/999999
+active_opponents: /home/server/Software-Challenge-GA/cython_v1/client_cython.py, /home/server/Software-Challenge-GA/cython_v2/client_cython_baseline.py, /home/server/Software-Challenge-GA/bots/client_optimized.py
+
+latest_eval: [16/16] fit=0.8333 W/L/D/E=5/1/0/0
+latest_eval_weights: 14.38232757,2.38038079,4.211739579,2.964444952,0.5055394367
+latest_best: gen=49 fit=0.9167 W/L/D/E=5/0/1/0
+latest_best_weights: 18.30426819,2.338011017,4.0585724,2.505749773,0.4874924205
+
+last_line: Best fitness: +0.9167
+
+validation:
+  state=done games_done=60/60 W/L/D/E=35/24/1/0
