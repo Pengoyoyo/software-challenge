@@ -488,7 +488,7 @@ def run_game(
         with server_log.open("w", encoding="utf-8") as srv:
             server_proc = subprocess.Popen(
                 cmd_server,
-                cwd=str(ROOT),
+                cwd=str(SERVER_JAR.parent),  # must run from server/ so lib/ is found
                 stdout=srv,
                 stderr=subprocess.STDOUT,
                 preexec_fn=os.setsid,
