@@ -1,0 +1,33 @@
+services:
+  tune:
+    build: .
+    image: piranhas-tune-rust-v2:latest
+    volumes:
+      - ./log:/app/log
+    command: >-
+      --core-budget 30
+      --games-per-opponent 8
+      --population-size 20
+      --generations 500
+      --resample-top 3
+      --resample-rounds 2
+
+  resume:
+    build: .
+    image: piranhas-tune-rust-v2:latest
+    volumes:
+      - ./log:/app/log
+    command: >-
+      --core-budget 30
+      --games-per-opponent 4
+      --population-size 20
+      --generations 50
+      --resample-top 3
+      --resample-rounds 1
+      --resume
+      --checkpoint ${CHECKPOINT:-log/tune_rust_v2/checkpoint.json}
+
+  dry-run:
+    build: .
+    image: piranhas-tune-rust-v2:latest
+    command: --dry-run

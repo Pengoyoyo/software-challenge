@@ -1,0 +1,38 @@
+# Version control
+.git/
+.gitignore
+
+# Python runtime
+.venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.egg-info/
+
+# Host-compiled Rust binaries (rebuilt in Stage 1)
+bots/rust/target/
+bots/rust_v2/target/
+bots/cython_v3/rust_core/target/
+
+# Host-compiled Cython artifacts (rebuilt in Stage 2)
+bots/*/cython_core/*.c
+bots/*/cython_core/*.so
+bots/*/cython_core/*.html
+bots/*/build/
+bots/*/dist/
+
+# Bots excluded from tuning — skip to keep image small
+bots/cpp/
+bots/my_player/
+
+# Duplicate bot copies (discovered dynamically, not needed)
+dist/
+
+# Tuning outputs (never bake into image)
+log/
+results/
+replays/
+duel_state.json
+
+# Misc
+*.log
