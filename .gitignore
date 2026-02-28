@@ -231,8 +231,8 @@ dkms.conf
 
 
 # Software Challenge specific
-server/
-*.jar
+#server/
+#*.jar
 docs/
 replays/
 *.zip
