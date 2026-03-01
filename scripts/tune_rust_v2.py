@@ -465,15 +465,45 @@ def kill_process_group(proc: subprocess.Popen[Any] | None) -> None:
 
 
 def parse_winner(log_content: str) -> str:
-    benchmark = get_benchmark_module()
+    """Return 'ONE', 'TWO', 'DRAW', or 'UNKNOWN' from any game log format."""
+    s = re.sub(r"\x1b\[[0-9;]*m", "", log_content)  # strip ANSI
 
-    result, _reason = benchmark.parse_game_result(log_content)
-    if result == benchmark.RESULT_WIN_ONE:
+    # ── explicit winner= patterns ────────────────────────────────────────────
+    # "winner=ONE" / "winner=TWO"  (legacy server log)
+    if re.search(r"winner\s*=\s*ONE\b", s, re.IGNORECASE):
         return "ONE"
-    if result == benchmark.RESULT_WIN_TWO:
+    if re.search(r"winner\s*=\s*TWO\b", s, re.IGNORECASE):
         return "TWO"
-    if result == benchmark.RESULT_DRAW:
+    # "Winner: ONE"
+    if re.search(r"Winner:\s*ONE\b", s, re.IGNORECASE):
+        return "ONE"
+    if re.search(r"Winner:\s*TWO\b", s, re.IGNORECASE):
+        return "TWO"
+    # "winner=Team One" / "winner=Team Two"
+    if re.search(r"winner\s*=\s*Team One\b", s, re.IGNORECASE):
+        return "ONE"
+    if re.search(r"winner\s*=\s*Team Two\b", s, re.IGNORECASE):
+        return "TWO"
+
+    # ── Python-bot log: Winner(team='ONE', ...)  ─────────────────────────────
+    if re.search(r"Winner\s*\(\s*team\s*=\s*['\"]?ONE['\"]?", s, re.IGNORECASE):
+        return "ONE"
+    if re.search(r"Winner\s*\(\s*team\s*=\s*['\"]?TWO['\"]?", s, re.IGNORECASE):
+        return "TWO"
+
+    # ── Rust-bot log: Winner { team: One, ... }  ─────────────────────────────
+    if re.search(r"Winner\s*\{[^}]*team\s*:\s*One\b", s, re.IGNORECASE):
+        return "ONE"
+    if re.search(r"Winner\s*\{[^}]*team\s*:\s*Two\b", s, re.IGNORECASE):
+        return "TWO"
+
+    # ── draw / no winner  ────────────────────────────────────────────────────
+    if re.search(
+        r"\b(draw|tie|unentschieden|gleichstand)\b|winner\s*=\s*(NONE|NULL|KEINER?)\b",
+        s, re.IGNORECASE,
+    ):
         return "DRAW"
+
     return "UNKNOWN"
 
 
