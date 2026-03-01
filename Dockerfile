@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 # ── Stage 1: Compile all Rust code ──────────────────────────────────────────
-FROM rust:1-bookworm-slim AS rust-builder
+FROM rust:1-slim-bookworm AS rust-builder
 
 WORKDIR /build
 
