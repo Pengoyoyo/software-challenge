@@ -847,13 +847,18 @@ def parse_game_result(log_content: str) -> tuple[int | None, str]:
         return RESULT_WIN_ONE, "winner=Team One"
     if re.search(r"winner\s*=\s*Team Two\b", sanitized, re.IGNORECASE):
         return RESULT_WIN_TWO, "winner=Team Two"
-    # Current server format: Winner(team='ONE', ...) in bot logs and server game-over lines
+    # Current server format (Python bots): Winner(team='ONE', ...)
     m = re.search(r"Winner\s*\(\s*team\s*=\s*['\"]?(ONE)['\"]?", sanitized, re.IGNORECASE)
     if m:
         return RESULT_WIN_ONE, "Winner(team=ONE)"
     m = re.search(r"Winner\s*\(\s*team\s*=\s*['\"]?(TWO)['\"]?", sanitized, re.IGNORECASE)
     if m:
         return RESULT_WIN_TWO, "Winner(team=TWO)"
+    # Rust bot log format: Winner { team: One, ... }
+    if re.search(r"Winner\s*\{[^}]*team\s*:\s*One\b", sanitized, re.IGNORECASE):
+        return RESULT_WIN_ONE, "Winner{team:One}"
+    if re.search(r"Winner\s*\{[^}]*team\s*:\s*Two\b", sanitized, re.IGNORECASE):
+        return RESULT_WIN_TWO, "Winner{team:Two}"
     if re.search(
         r"\b(draw|tie|unentschieden|gleichstand)\b|winner\s*=\s*(NONE|NULL|KEINER?)\b",
         sanitized,
