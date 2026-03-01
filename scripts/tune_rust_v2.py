@@ -73,7 +73,7 @@ N_WEIGHTS = len(WEIGHT_NAMES)  # 13
 
 DEFAULT_TARGET = ROOT / "bots" / "rust_v2" / "pur_rust_client.py"
 DEFAULT_TARGET_ENV = "PIRANHAS_RSV2_EVAL_WEIGHTS"
-DEFAULT_EXCLUDES = [r"/bots/cpp/", r"/bots/my_player/", r"/submissions/"]
+DEFAULT_EXCLUDES = [r"/bots/cpp/", r"/bots/my_player/", r"/submissions/", r"/bots/python/client\.py$"]
 _BENCHMARK_MOD: Any | None = None
 _PORT_LOCK = threading.Lock()
 _RESERVED_PORTS: set[int] = set()
