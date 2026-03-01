@@ -579,6 +579,14 @@ def run_game(
             result["winner"] = parse_winner(content)
         else:
             result["winner"] = "UNKNOWN"
+        # Fallback: try bot logs if server log didn't yield a clear winner
+        if result["winner"] == "UNKNOWN":
+            for log_path in (bot1_log, bot2_log):
+                if log_path.exists():
+                    w = parse_winner(log_path.read_text(encoding="utf-8", errors="ignore"))
+                    if w != "UNKNOWN":
+                        result["winner"] = w
+                        break
 
     except Exception:
         result["winner"] = "ERROR"
