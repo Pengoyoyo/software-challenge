@@ -5,7 +5,7 @@ services:
     volumes:
       - ./log:/app/log
     command: >-
-      --core-budget 30
+      --core-budget 8
       --games-per-opponent 8
       --population-size 20
       --generations 500
