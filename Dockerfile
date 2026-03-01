@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 # ── Stage 1: Compile all Rust code ──────────────────────────────────────────
-FROM rust:1-slim AS rust-builder
+FROM rust:1-bookworm-slim AS rust-builder
 
 WORKDIR /build
 
@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 
 # ── Stage 2: Runtime image ───────────────────────────────────────────────────
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 # Java JRE for server.jar  +  GCC/python3-dev for Cython compilation
 RUN apt-get update \
