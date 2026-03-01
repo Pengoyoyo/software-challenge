@@ -47,7 +47,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Project source
 COPY server/        server/
 COPY bots/          bots/
-COPY opponent_bots/ opponent_bots/
 COPY scripts/       scripts/
 COPY benchmark.py   custom_bot_paths.json ./
 
