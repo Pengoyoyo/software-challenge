@@ -38,8 +38,16 @@ START_SH_RUST = """\
 #!/bin/sh
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-chmod +x "$SCRIPT_DIR/my_player/piranhas-bot"
-exec "$SCRIPT_DIR/my_player/piranhas-bot" "$@"
+chmod +x "$SCRIPT_DIR/piranhas-bot"
+exec "$SCRIPT_DIR/piranhas-bot" "$@"
+"""
+
+START_SH_RUST_V2 = """\
+#!/bin/sh
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+chmod +x "$SCRIPT_DIR/piranhas-bot-v2"
+exec "$SCRIPT_DIR/piranhas-bot-v2" "$@"
 """
 
 
@@ -158,6 +166,27 @@ with zipfile.ZipFile(OUT / "submission_rust_bot.zip", "w", zipfile.ZIP_DEFLATED)
     zf.write(BASE / "bots/rust/pur_rust_client.py", "my_player/pur_rust_client.py")
     print(f"  + pur_rust_client.py")
 finish("submission_rust_bot.zip")
+
+# ── rust_v2 (pure Rust binary) ───────────────────────────────────────────────
+print("\nBuilding rust_v2...")
+result = subprocess.run(
+    ["cargo", "build", "--release"],
+    cwd=BASE / "bots/rust_v2",
+    capture_output=True,
+    text=True,
+)
+if result.returncode != 0:
+    print(f"  WARNING: cargo build failed:\n{result.stderr[-500:]}")
+else:
+    print("  Built OK")
+
+rust_v2_bin = BASE / "bots/rust_v2/target/release/piranhas-bot-v2"
+print("Packaging rust_v2...")
+with zipfile.ZipFile(OUT / "submission_rust_v2.zip", "w", zipfile.ZIP_DEFLATED) as zf:
+    zf.writestr("my_player/start.sh", START_SH_RUST_V2)
+    zf.write(rust_v2_bin, "my_player/piranhas-bot-v2")
+    print("  + piranhas-bot-v2")
+finish("submission_rust_v2.zip")
 
 # ── Summary ──────────────────────────────────────────────────────────────────
 print("\n" + "=" * 50)

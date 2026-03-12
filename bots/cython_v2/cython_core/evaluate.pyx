@@ -17,17 +17,17 @@ cdef int[8][2] NEIGHBOR_OFFSETS = [
 ]
 
 # Runtime-tunable evaluation weights (used by GA).
-cdef double DEFAULT_W_BEST_SWARM = 17.74
-cdef double DEFAULT_W_SWARM_COUNT = 3.0
-cdef double DEFAULT_W_MATERIAL = 2.0
-cdef double DEFAULT_W_ISOLATED = 4.0
-cdef double DEFAULT_W_DISTANCE = 0.63
+cdef double DEFAULT_W_BEST_SWARM = 27.48
+cdef double DEFAULT_W_SWARM_COUNT = 3.76
+cdef double DEFAULT_W_MATERIAL = 9.06
+cdef double DEFAULT_W_ISOLATED = 0.42
+cdef double DEFAULT_W_DISTANCE = 0.62
 
-cdef double W_BEST_SWARM = 17.74
-cdef double W_SWARM_COUNT = 3.0
-cdef double W_MATERIAL = 2.0
-cdef double W_ISOLATED = 4.0
-cdef double W_DISTANCE = 0.63
+cdef double W_BEST_SWARM = 27.48
+cdef double W_SWARM_COUNT = 3.76
+cdef double W_MATERIAL = 9.06
+cdef double W_ISOLATED = 0.42
+cdef double W_DISTANCE = 0.62
 
 
 cdef struct SwarmData:
