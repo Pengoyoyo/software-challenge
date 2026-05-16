@@ -1,9 +1,6 @@
-use std::sync::OnceLock;
-
+use crate::bitboard::{flood_fill_fast, get_neighbor_masks, pop_lsb, Bitboard};
 use socha::internal::GameState;
 use socha::neutral::{PiranhaField, Size, Team};
-
-use crate::bitboard::{flood_fill_fast, get_neighbor_masks, pop_lsb, Bitboard};
 
 // ─── Piece encoding ──────────────────────────────────────────────────────────
 pub const EMPTY: u8 = 0;
@@ -91,7 +88,7 @@ pub struct Tables {
     pub zobrist_side: u64,
 }
 
-static TABLES: OnceLock<Tables> = OnceLock::new();
+static TABLES: std::sync::OnceLock<Tables> = std::sync::OnceLock::new();
 
 pub fn get_tables() -> &'static Tables {
     TABLES.get_or_init(Tables::init)
@@ -237,13 +234,40 @@ impl Default for MoveList {
 
 // ─── Undo ─────────────────────────────────────────────────────────────────────
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 pub struct Undo {
     pub mv: Move,
     pub captured: u8,
     pub prev_player: u8,
     pub prev_turn: u16,
     pub prev_hash: u64,
+    pub prev_connected_since: [Option<u16>; 2],
+    // Incremental connectivity snapshot (index 0 unused, 1 = ONE, 2 = TWO)
+    pub prev_comp_id: [[u8; 100]; 3],
+    pub prev_comp_size: [[u8; 8]; 3],
+    pub prev_comp_value: [[u16; 8]; 3],
+    pub prev_comp_sum_x: [[u16; 8]; 3],
+    pub prev_comp_sum_y: [[u16; 8]; 3],
+    pub prev_n_comps: [u8; 3],
+}
+
+impl Default for Undo {
+    fn default() -> Self {
+        Undo {
+            mv: Move::default(),
+            captured: 0,
+            prev_player: ONE,
+            prev_turn: 0,
+            prev_hash: 0,
+            prev_connected_since: [None; 2],
+            prev_comp_id: [[0; 100]; 3],
+            prev_comp_size: [[0; 8]; 3],
+            prev_comp_value: [[0; 8]; 3],
+            prev_comp_sum_x: [[0; 8]; 3],
+            prev_comp_sum_y: [[0; 8]; 3],
+            prev_n_comps: [0; 3],
+        }
+    }
 }
 
 // ─── Position ─────────────────────────────────────────────────────────────────
@@ -270,6 +294,20 @@ pub struct Position {
     pub one_value: u16,
     pub two_value: u16,
     pub hash: u64,
+    pub connected_since: [Option<u16>; 2], // [ONE, TWO]
+
+    // Incremental connectivity data (index 0 unused, 1 = ONE, 2 = TWO)
+    // comp_id[player][sq]: 0 = not this player, 1..n = component id
+    pub comp_id: [[u8; 100]; 3],
+    // comp_size[player][id]: number of pieces in component id
+    pub comp_size: [[u8; 8]; 3],
+    // comp_value[player][id]: sum of fish values in component id
+    pub comp_value: [[u16; 8]; 3],
+    // comp_sum_x/y[player][id]: sum of coordinates for centroid
+    pub comp_sum_x: [[u16; 8]; 3],
+    pub comp_sum_y: [[u16; 8]; 3],
+    // n_comps[player]: active component count (id 0 unused)
+    pub n_comps: [u8; 3],
 }
 
 impl Clone for Position {
@@ -292,6 +330,13 @@ impl Clone for Position {
             one_value: self.one_value,
             two_value: self.two_value,
             hash: self.hash,
+            connected_since: self.connected_since,
+            comp_id: self.comp_id,
+            comp_size: self.comp_size,
+            comp_value: self.comp_value,
+            comp_sum_x: self.comp_sum_x,
+            comp_sum_y: self.comp_sum_y,
+            n_comps: self.n_comps,
         }
     }
 }
@@ -316,6 +361,13 @@ impl Default for Position {
             one_value: 0,
             two_value: 0,
             hash: 0,
+            connected_since: [None; 2],
+            comp_id: [[0; 100]; 3],
+            comp_size: [[0; 8]; 3],
+            comp_value: [[0; 8]; 3],
+            comp_sum_x: [[0; 8]; 3],
+            comp_sum_y: [[0; 8]; 3],
+            n_comps: [0; 3],
         }
     }
 }
@@ -407,6 +459,7 @@ impl Position {
         self.bb_one = 0;
         self.bb_two = 0;
         self.bb_squids = 0;
+        self.connected_since = [None; 2];
 
         for sq in 0..100usize {
             let piece = self.board[sq];
@@ -436,6 +489,83 @@ impl Position {
 
         if self.player == TWO {
             self.hash ^= t.zobrist_side;
+        }
+
+        self._rebuild_components(ONE);
+        self._rebuild_components(TWO);
+
+        if self.n_comps[ONE as usize] <= 1 && self.one_count > 0 {
+            self.connected_since[0] = Some(self.turn);
+        }
+        if self.n_comps[TWO as usize] <= 1 && self.two_count > 0 {
+            self.connected_since[1] = Some(self.turn);
+        }
+    }
+
+    /// Rebuild component data for a player from current bitboards.
+    /// Called in recompute_caches and after make_move/unmake_move for affected players.
+    /// Time: O(pieces) where pieces <= 8, so this is extremely fast.
+    fn _rebuild_components(&mut self, player: u8) {
+        let p = player as usize;
+        let pieces_bb = if player == ONE { self.bb_one } else { self.bb_two };
+
+        self.n_comps[p] = 0;
+        self.comp_id[p] = [0; 100];
+        self.comp_size[p] = [0; 8];
+        self.comp_value[p] = [0; 8];
+        self.comp_sum_x[p] = [0; 8];
+        self.comp_sum_y[p] = [0; 8];
+
+        if pieces_bb == 0 {
+            return;
+        }
+
+        let nb = get_neighbor_masks();
+        let mut remaining = pieces_bb;
+        let mut next_id = 1u8;
+
+        while remaining != 0 {
+            let start = pop_lsb(&mut remaining);
+            // BFS/Flood-fill to find all pieces in this component
+            let mut frontier = 1u128 << start;
+            let mut comp_bb = frontier;
+
+            while frontier != 0 {
+                let sq = pop_lsb(&mut frontier);
+                let neighbors = nb[sq] & pieces_bb;
+                let new_neighbors = neighbors & !comp_bb;
+                comp_bb |= new_neighbors;
+                frontier |= new_neighbors;
+            }
+
+            // Record component data
+            let id = next_id;
+            next_id += 1;
+            self.n_comps[p] = id;
+
+            let mut size = 0u8;
+            let mut value = 0u16;
+            let mut sum_x = 0u16;
+            let mut sum_y = 0u16;
+
+            let mut bits = comp_bb;
+            while bits != 0 {
+                let sq = pop_lsb(&mut bits);
+                self.comp_id[p][sq] = id;
+                size += 1;
+                value += self.fish_value[sq] as u16;
+                sum_x += (sq % 10) as u16;
+                sum_y += (sq / 10) as u16;
+            }
+
+            self.comp_size[p][id as usize] = size;
+            self.comp_value[p][id as usize] = value;
+            self.comp_sum_x[p][id as usize] = sum_x;
+            self.comp_sum_y[p][id as usize] = sum_y;
+
+            // Remove found pieces from remaining (already done by pop_lsb loop,
+            // but comp_bb might have included pieces not yet reached by remaining)
+            remaining &= !comp_bb;
         }
     }
 
@@ -504,6 +634,13 @@ impl Position {
         undo.prev_player = self.player;
         undo.prev_turn = self.turn;
         undo.prev_hash = self.hash;
+        undo.prev_connected_since = self.connected_since;
+        undo.prev_comp_id = self.comp_id;
+        undo.prev_comp_size = self.comp_size;
+        undo.prev_comp_value = self.comp_value;
+        undo.prev_comp_sum_x = self.comp_sum_x;
+        undo.prev_comp_sum_y = self.comp_sum_y;
+        undo.prev_n_comps = self.n_comps;
 
         self.line_decrement(from);
         if captured_owner != 0 {
@@ -549,6 +686,17 @@ impl Position {
 
         self.player = opponent(self.player);
         self.turn += 1;
+
+        self._rebuild_components(moved_owner);
+        if captured_owner != 0 {
+            self._rebuild_components(captured_owner);
+        }
+
+        let p = moved_owner as usize;
+        let idx = p - 1;
+        if self.connected_since[idx].is_none() && self.n_comps[p] <= 1 && self.comp_size[p][1] > 0 {
+            self.connected_since[idx] = Some(self.turn);
+        }
 
         true
     }
@@ -602,6 +750,13 @@ impl Position {
         self.player = undo.prev_player;
         self.turn = undo.prev_turn;
         self.hash = undo.prev_hash;
+        self.connected_since = undo.prev_connected_since;
+        self.comp_id = undo.prev_comp_id;
+        self.comp_size = undo.prev_comp_size;
+        self.comp_value = undo.prev_comp_value;
+        self.comp_sum_x = undo.prev_comp_sum_x;
+        self.comp_sum_y = undo.prev_comp_sum_y;
+        self.n_comps = undo.prev_n_comps;
     }
 
     pub fn make_null_move(&mut self) -> (u8, u16, u64) {
@@ -620,9 +775,9 @@ impl Position {
 
     // ── Move generation ───────────────────────────────────────────────────────
 
-    pub fn generate_moves(&self, out: &mut MoveList) {
+    pub fn generate_moves_for(&self, player: u8, out: &mut MoveList) {
         let t = get_tables();
-        let (own_bb, opp_bb) = if self.player == ONE {
+        let (own_bb, opp_bb) = if player == ONE {
             (self.bb_one, self.bb_two)
         } else {
             (self.bb_two, self.bb_one)
@@ -659,9 +814,13 @@ impl Position {
         }
     }
 
-    pub fn generate_captures(&self, out: &mut MoveList) {
+    pub fn generate_moves(&self, out: &mut MoveList) {
+        self.generate_moves_for(self.player, out);
+    }
+
+    pub fn generate_captures_for(&self, player: u8, out: &mut MoveList) {
         let t = get_tables();
-        let (own_bb, opp_bb) = if self.player == ONE {
+        let (own_bb, opp_bb) = if player == ONE {
             (self.bb_one, self.bb_two)
         } else {
             (self.bb_two, self.bb_one)
@@ -696,105 +855,66 @@ impl Position {
         }
     }
 
-    // ── Connectivity (bitboard flood fill) ────────────────────────────────────
+    pub fn generate_captures(&self, out: &mut MoveList) {
+        self.generate_captures_for(self.player, out);
+    }
+
+    // ── Connectivity (O(1) via incremental component tracking) ────────────────
 
     #[inline]
     pub fn is_connected(&self, player: u8) -> bool {
-        let pieces_bb = if player == ONE { self.bb_one } else { self.bb_two };
-        let count = pieces_bb.count_ones();
-        if count <= 1 {
-            return true;
-        }
-        let start = 1u128 << pieces_bb.trailing_zeros();
-        flood_fill_fast(start, pieces_bb) == pieces_bb
+        let p = player as usize;
+        let count = if player == ONE { self.one_count } else { self.two_count };
+        count <= 1 || self.n_comps[p] <= 1
     }
 
     pub fn component_count(&self, player: u8) -> i32 {
-        let mut remaining = if player == ONE { self.bb_one } else { self.bb_two };
-        if remaining == 0 {
-            return 0;
-        }
-        let mut components = 0i32;
-        while remaining != 0 {
-            let start = 1u128 << remaining.trailing_zeros();
-            let comp = flood_fill_fast(start, remaining);
-            remaining &= !comp;
-            components += 1;
-        }
-        components
+        self.n_comps[player as usize] as i32
     }
 
     pub fn largest_component_value(&self, player: u8) -> i32 {
-        let mut remaining = if player == ONE { self.bb_one } else { self.bb_two };
-        if remaining == 0 {
+        let p = player as usize;
+        let n = self.n_comps[p] as usize;
+        if n == 0 {
             return 0;
         }
         let mut best = 0i32;
-        while remaining != 0 {
-            let start = 1u128 << remaining.trailing_zeros();
-            let comp = flood_fill_fast(start, remaining);
-            remaining &= !comp;
-
-            let mut value_sum = 0i32;
-            let mut bits = comp;
-            while bits != 0 {
-                let sq = pop_lsb(&mut bits);
-                value_sum += self.fish_value[sq] as i32;
-            }
-            if value_sum > best {
-                best = value_sum;
+        for id in 1..=n {
+            let val = self.comp_value[p][id] as i32;
+            if val > best {
+                best = val;
             }
         }
         best
     }
 
     pub fn component_spread(&self, player: u8) -> i32 {
-        let pieces_bb = if player == ONE { self.bb_one } else { self.bb_two };
-        if pieces_bb.count_ones() <= 1 {
+        let p = player as usize;
+        let n = self.n_comps[p] as usize;
+        if n <= 1 {
             return 0;
         }
 
-        let mut remaining = pieces_bb;
-        let mut centroids = [(0i32, 0i32); 16]; // max 8 fish per side, so 16 is safe
-        let mut n_comps = 0usize;
-
-        while remaining != 0 {
-            let start = 1u128 << remaining.trailing_zeros();
-            let comp = flood_fill_fast(start, remaining);
-            remaining &= !comp;
-
-            let mut sum_x = 0i32;
-            let mut sum_y = 0i32;
-            let mut size = 0i32;
-            let mut bits = comp;
-            while bits != 0 {
-                let sq = pop_lsb(&mut bits);
-                sum_x += (sq % 10) as i32;
-                sum_y += (sq / 10) as i32;
-                size += 1;
-            }
-            centroids[n_comps] = ((sum_x + size / 2) / size, (sum_y + size / 2) / size);
-            n_comps += 1;
-            if n_comps >= 16 {
-                break;
-            }
-        }
-
-        if n_comps <= 1 {
-            return 0;
+        // Compute centroids from pre-summed component data
+        let mut centroids = [(0i32, 0i32); 8];
+        for id in 1..=n {
+            let size = self.comp_size[p][id] as i32;
+            let cx = (self.comp_sum_x[p][id] as i32 + size / 2) / size;
+            let cy = (self.comp_sum_y[p][id] as i32 + size / 2) / size;
+            centroids[id - 1] = (cx, cy);
         }
 
         let mut gx = 0i32;
         let mut gy = 0i32;
-        for i in 0..n_comps {
+        for i in 0..n {
             gx += centroids[i].0;
             gy += centroids[i].1;
         }
-        gx /= n_comps as i32;
-        gy /= n_comps as i32;
+        gx /= n as i32;
+        gy /= n as i32;
 
         let mut spread = 0i32;
-        for i in 0..n_comps {
+        for i in 0..n {
             spread += (centroids[i].0 - gx)
                 .abs()
                 .max((centroids[i].1 - gy).abs());
@@ -828,5 +948,186 @@ impl Position {
         let to_nb = (nb[to] & own_without_from).count_ones() as i32;
 
         to_nb - from_nb
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_position_empty() {
+        let pos = Position::default();
+        assert_eq!(pos.one_count, 0);
+        assert_eq!(pos.two_count, 0);
+        assert_eq!(pos.bb_one, 0);
+        assert_eq!(pos.bb_two, 0);
+        assert_eq!(pos.bb_squids, 0);
+    }
+
+    #[test]
+    fn recompute_caches_counts() {
+        let mut pos = Position::default();
+        pos.board[0] = 1; // Team One, size 1
+        pos.board[1] = 2; // Team One, size 2
+        pos.board[5] = 4; // Team Two, size 1
+        pos.recompute_caches();
+        assert_eq!(pos.one_count, 2);
+        assert_eq!(pos.two_count, 1);
+        assert_eq!(pos.one_value, 3);
+        assert_eq!(pos.two_value, 1);
+        assert_eq!(pos.bb_one, (1u128 << 0) | (1u128 << 1));
+        assert_eq!(pos.bb_two, 1u128 << 5);
+    }
+
+    #[test]
+    fn line_count_row() {
+        let mut pos = Position::default();
+        pos.board[0] = 1;
+        pos.board[1] = 1;
+        pos.recompute_caches();
+        // Row 0 has 2 pieces
+        assert_eq!(pos.line_count(0, 4), 2); // Right direction
+    }
+
+    #[test]
+    fn make_move_updates_counts() {
+        let mut pos = Position::default();
+        pos.board[0] = 1; // Team One at (0,0)
+        pos.board[5] = 4; // Team Two at (5,0)
+        pos.recompute_caches();
+        pos.player = ONE;
+        let mut undo = Undo::default();
+        let mv = Move { from: 0, to: 5 };
+        assert!(pos.make_move(mv, &mut undo));
+        assert_eq!(pos.board[0], EMPTY);
+        assert_eq!(pos.board[5], 1); // Now Team One
+        assert_eq!(pos.one_count, 1);
+        assert_eq!(pos.two_count, 0);
+        pos.unmake_move(&undo);
+        assert_eq!(pos.board[0], 1);
+        assert_eq!(pos.board[5], 4);
+        assert_eq!(pos.one_count, 1);
+        assert_eq!(pos.two_count, 1);
+    }
+
+    #[test]
+    fn make_unmake_invariant() {
+        let mut pos = Position::default();
+        pos.board[0] = 1;
+        pos.board[9] = 4;
+        pos.recompute_caches();
+        pos.player = ONE;
+        let mut undo = Undo::default();
+        let mv = Move { from: 0, to: 9 };
+        let hash_before = pos.hash;
+        assert!(pos.make_move(mv, &mut undo));
+        pos.unmake_move(&undo);
+        assert_eq!(pos.board[0], 1);
+        assert_eq!(pos.board[9], 4);
+        assert_eq!(pos.hash, hash_before);
+        assert_eq!(pos.player, ONE);
+    }
+
+    #[test]
+    fn generate_moves_basic() {
+        let mut pos = Position::default();
+        pos.board[0] = 1; // Team One at (0,0)
+        pos.board[9] = 4; // Team Two at (9,0)
+        pos.recompute_caches();
+        pos.player = ONE;
+        let mut ml = MoveList::new();
+        pos.generate_moves(&mut ml);
+        assert!(ml.len > 0);
+        // Should include capture of (9,0) if line_count allows
+    }
+
+    #[test]
+    fn connectivity_single() {
+        let mut pos = Position::default();
+        pos.board[0] = 1;
+        pos.recompute_caches();
+        assert!(pos.is_connected(ONE));
+    }
+
+    #[test]
+    fn connectivity_two_adjacent() {
+        let mut pos = Position::default();
+        pos.board[0] = 1;
+        pos.board[1] = 1;
+        pos.recompute_caches();
+        assert!(pos.is_connected(ONE));
+    }
+
+    #[test]
+    fn connectivity_two_disconnected() {
+        let mut pos = Position::default();
+        pos.board[0] = 1;
+        pos.board[99] = 1;
+        pos.recompute_caches();
+        assert!(!pos.is_connected(ONE));
+    }
+
+    #[test]
+    fn undo_default_initializes_correctly() {
+        let u = Undo::default();
+        assert_eq!(u.prev_connected_since[0], None);
+        assert_eq!(u.prev_connected_since[1], None);
+    }
+
+    #[test]
+    fn connected_since_first_connect() {
+        let mut pos = Position::default();
+        pos.board[0] = 1; // Red at (0,0)
+        pos.board[99] = 1; // Red at (9,9) — disconnected
+        pos.recompute_caches();
+        pos.player = ONE;
+        pos.turn = 5;
+
+        // Before move: Red not connected
+        assert_eq!(pos.connected_since[0], None);
+
+        let mut undo = Undo::default();
+        let mv = Move { from: 99, to: 1 }; // Red moves to (1,0), adjacent to (0,0)
+        assert!(pos.make_move(mv, &mut undo));
+        // After move, Red at 0 and 1 are adjacent → connected
+        assert!(pos.is_connected(ONE));
+        // connected_since should now be set to turn after move (6)
+        assert_eq!(pos.connected_since[0], Some(6));
+
+        pos.unmake_move(&undo);
+        assert_eq!(pos.connected_since[0], None);
+    }
+
+    #[test]
+    fn tiebreaker_red_first() {
+        let mut pos = Position::default();
+        pos.board[0] = 1;
+        pos.board[1] = 1;
+        pos.board[99] = 4;
+        pos.recompute_caches();
+        pos.turn = 60;
+        pos.connected_since[0] = Some(10); // Red connected first at turn 10
+        pos.connected_since[1] = Some(20); // Blue connected first at turn 20
+
+        // Red and Blue both have swarm weight 1, but Red connected first
+        let score = crate::evaluate::terminal_swarm_score(&pos, ONE, 0);
+        assert!(score > 0);
+    }
+
+    #[test]
+    fn tiebreaker_blue_first() {
+        let mut pos2 = Position::default();
+        pos2.board[0] = 1;
+        pos2.board[1] = 1;
+        pos2.board[99] = 4;
+        pos2.board[98] = 4;
+        pos2.recompute_caches();
+        pos2.turn = 60;
+        pos2.connected_since[0] = Some(20);
+        pos2.connected_since[1] = Some(10);
+
+        let score = crate::evaluate::terminal_swarm_score(&pos2, ONE, 0);
+        assert!(score < 0);
     }
 }

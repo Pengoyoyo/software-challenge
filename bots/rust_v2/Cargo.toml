@@ -3,6 +3,18 @@ name = "piranhas-bot-v2"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "piranhas-bot-v2"
+path = "src/main.rs"
+
+[[bin]]
+name = "selfplay"
+path = "src/bin/selfplay.rs"
+
+[[bin]]
+name = "benchmark"
+path = "benches/benchmark.rs"
+
 [dependencies]
 socha = { git = "https://github.com/simoncreates/socha.git" }
 log = "0.4"

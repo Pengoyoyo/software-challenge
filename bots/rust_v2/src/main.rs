@@ -81,7 +81,15 @@ impl Logic {
 
         eprintln!("\n=== Zug {} ===", self.move_number);
 
-        let deadline = Instant::now() + Duration::from_millis(1700);
+        // Dynamic time management: more time early, less time late
+        let time_budget_ms = match pos.turn {
+            0..=4 => 1900,
+            5..=20 => 1800,
+            21..=40 => 1600,
+            41..=50 => 1200,
+            _ => 800,
+        };
+        let deadline = Instant::now() + Duration::from_millis(time_budget_ms);
         let result = self.engine.search(&mut pos, deadline);
 
         eprintln!("Rust Search: {} moves, team={}", result.num_moves, pos.player);
@@ -92,11 +100,7 @@ impl Logic {
             );
         }
 
-        let internal_mv = result.best_move.unwrap_or_else(|| {
-            let mut ml = board::MoveList::new();
-            pos.generate_moves(&mut ml);
-            if ml.len > 0 { ml.moves[0] } else { Move::default() }
-        });
+        let internal_mv = result.best_move.expect("Engine did not produce a legal move");
 
         let socha_mv = pos.to_socha_move(internal_mv);
         let elapsed = t0.elapsed().as_secs_f64();

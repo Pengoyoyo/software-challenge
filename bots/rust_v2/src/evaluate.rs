@@ -2,10 +2,8 @@ use crate::bitboard::{get_neighbor_masks, pop_lsb};
 use crate::board::{
     get_tables, opponent, piece_owner, MoveList, Position, ONE, TWO,
 };
-use std::sync::OnceLock;
 
 // ─── Score constants ──────────────────────────────────────────────────────────
-pub const WIN_SCORE: i32 = 1_000_000;
 pub const MATE_SCORE: i32 = 900_000;
 
 // ─── Evaluation weights ───────────────────────────────────────────────────────
@@ -23,78 +21,27 @@ struct EvalWeights {
     w_late_spread: i32,
     w_late_links: i32,
     w_late_mobility: i32,
-    connect_bonus: i32,
 }
 
 const DEFAULT_WEIGHTS: EvalWeights = EvalWeights {
     // Deviations from C++ are intentional; see plan for rationale.
-    w_largest: 380,
-    w_components: 260,
-    w_spread: 50,
-    w_material: 130,
-    w_links: 15,
-    w_center: 4,
-    w_mobility: 7,
-    w_late_largest: 180,
-    w_late_components: 130,
-    w_late_spread: 90,
-    w_late_links: 20,
+    w_largest: 543,
+    w_components: 160,
+    w_spread: 58,
+    w_material: 232,
+    w_links: 23,
+    w_center: 6,
+    w_mobility: 4,
+    w_late_largest: 155,
+    w_late_components: 172,
+    w_late_spread: 130,
+    w_late_links: 47,
     w_late_mobility: 12,
-    connect_bonus: 85_000,
 };
-
-static EVAL_WEIGHTS: OnceLock<EvalWeights> = OnceLock::new();
-
-fn parse_weights_list(raw: &str) -> Option<EvalWeights> {
-    let parts: Vec<&str> = raw
-        .split(',')
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-        .collect();
-    if parts.len() != 13 {
-        return None;
-    }
-
-    let mut vals = [0i32; 13];
-    for (i, p) in parts.iter().enumerate() {
-        let v = p.parse::<f64>().ok()?;
-        if !v.is_finite() {
-            return None;
-        }
-        vals[i] = v.round() as i32;
-    }
-
-    Some(EvalWeights {
-        w_largest: vals[0],
-        w_components: vals[1],
-        w_spread: vals[2],
-        w_material: vals[3],
-        w_links: vals[4],
-        w_center: vals[5],
-        w_mobility: vals[6],
-        w_late_largest: vals[7],
-        w_late_components: vals[8],
-        w_late_spread: vals[9],
-        w_late_links: vals[10],
-        w_late_mobility: vals[11],
-        connect_bonus: vals[12],
-    })
-}
-
-fn load_eval_weights() -> EvalWeights {
-    for key in ["PIRANHAS_RSV2_EVAL_WEIGHTS", "PIRANHAS_RS_EVAL_WEIGHTS", "RUST_EVAL_WEIGHTS"] {
-        if let Ok(raw) = std::env::var(key) {
-            if let Some(parsed) = parse_weights_list(&raw) {
-                return parsed;
-            }
-        }
-    }
-    DEFAULT_WEIGHTS
-}
 
 #[inline]
 fn eval_weights() -> &'static EvalWeights {
-    EVAL_WEIGHTS.get_or_init(load_eval_weights)
+    &DEFAULT_WEIGHTS
 }
 
 // ─── Terminal score at turn >= 60 ─────────────────────────────────────────────
@@ -110,6 +57,17 @@ pub fn terminal_swarm_score(pos: &Position, perspective: u8, ply: i32) -> i32 {
     }
     if opp_swarm > own_swarm {
         return -MATE_SCORE + ply;
+    }
+
+    // Tiebreaker: who formed a complete school first?
+    let own_idx = if perspective == ONE { 0 } else { 1 };
+    let opp_idx = if opp == ONE { 0 } else { 1 };
+    match (pos.connected_since[own_idx], pos.connected_since[opp_idx]) {
+        (Some(o), Some(b)) if o < b => return MATE_SCORE - ply,
+        (Some(o), Some(b)) if b < o => return -MATE_SCORE + ply,
+        (Some(_), None) => return MATE_SCORE - ply,
+        (None, Some(_)) => return -MATE_SCORE + ply,
+        _ => {}
     }
 
     let own_val = pos.total_piece_value(perspective);
@@ -158,18 +116,14 @@ fn shape_links(pos: &Position, player: u8, center_sum: &mut i32) -> i32 {
 
 // ─── One-move connect check ───────────────────────────────────────────────────
 
-pub fn has_one_move_connect(pos: &mut Position, player: u8, max_checks: usize) -> bool {
+pub fn has_one_move_connect(pos: &Position, player: u8, max_checks: usize) -> bool {
     let count = if player == ONE { pos.one_count } else { pos.two_count };
     if count > 8 {
         return false;
     }
 
     let mut moves = MoveList::new();
-    // Temporarily set player to generate moves for them
-    let saved_player = pos.player;
-    pos.player = player;
-    pos.generate_moves(&mut moves);
-    pos.player = saved_player;
+    pos.generate_moves_for(player, &mut moves);
 
     if moves.len == 0 {
         return false;
@@ -194,18 +148,16 @@ pub fn has_one_move_connect(pos: &mut Position, player: u8, max_checks: usize) -
     let checks = max_checks.min(moves.len);
     for i in 0..checks {
         let mv = moves.moves[i];
+        let mut test_pos = pos.clone();
         let mut undo = crate::board::Undo::default();
 
-        pos.player = player;
-        let ok = pos.make_move(mv, &mut undo);
+        test_pos.player = player;
+        let ok = test_pos.make_move(mv, &mut undo);
         if !ok {
-            pos.player = saved_player;
             continue;
         }
 
-        let connected = pos.is_connected(player);
-        pos.unmake_move(&undo);
-        pos.player = saved_player;
+        let connected = test_pos.is_connected(player);
 
         if connected {
             return true;
@@ -217,7 +169,7 @@ pub fn has_one_move_connect(pos: &mut Position, player: u8, max_checks: usize) -
 
 // ─── Main evaluation ─────────────────────────────────────────────────────────
 
-pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
+pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32) -> i32 {
     let w = eval_weights();
     let opp = opponent(perspective);
 
@@ -228,30 +180,48 @@ pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
 
         if red_swarm > blue_swarm {
             return if perspective == ONE {
-                WIN_SCORE - pos.turn as i32
+                MATE_SCORE - pos.turn as i32
             } else {
-                -WIN_SCORE + pos.turn as i32
+                -MATE_SCORE + pos.turn as i32
             };
         }
         if blue_swarm > red_swarm {
             return if perspective == TWO {
-                WIN_SCORE - pos.turn as i32
+                MATE_SCORE - pos.turn as i32
             } else {
-                -WIN_SCORE + pos.turn as i32
+                -MATE_SCORE + pos.turn as i32
             };
         }
+
+        // Tiebreaker: first complete school
+        match (pos.connected_since[0], pos.connected_since[1]) {
+            (Some(r), Some(b)) if r < b => {
+                return if perspective == ONE { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+            }
+            (Some(r), Some(b)) if b < r => {
+                return if perspective == TWO { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+            }
+            (Some(_), None) => {
+                return if perspective == ONE { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+            }
+            (None, Some(_)) => {
+                return if perspective == TWO { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+            }
+            _ => {}
+        }
+
         if pos.total_piece_value(ONE) > pos.total_piece_value(TWO) {
             return if perspective == ONE {
-                WIN_SCORE - pos.turn as i32
+                MATE_SCORE - pos.turn as i32
             } else {
-                -WIN_SCORE + pos.turn as i32
+                -MATE_SCORE + pos.turn as i32
             };
         }
         if pos.total_piece_value(TWO) > pos.total_piece_value(ONE) {
             return if perspective == TWO {
-                WIN_SCORE - pos.turn as i32
+                MATE_SCORE - pos.turn as i32
             } else {
-                -WIN_SCORE + pos.turn as i32
+                -MATE_SCORE + pos.turn as i32
             };
         }
         return 0;
@@ -262,10 +232,10 @@ pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
 
     // One side eliminated
     if own_count == 0 && opp_count > 0 {
-        return -WIN_SCORE + pos.turn as i32;
+        return -MATE_SCORE + pos.turn as i32;
     }
     if opp_count == 0 && own_count > 0 {
-        return WIN_SCORE - pos.turn as i32;
+        return MATE_SCORE - pos.turn as i32;
     }
 
     let own_total = pos.total_piece_value(perspective);
@@ -275,10 +245,10 @@ pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
 
     // Win if already connected
     if own_total > 0 && own_largest == own_total {
-        return WIN_SCORE - pos.turn as i32;
+        return MATE_SCORE - pos.turn as i32;
     }
     if opp_total > 0 && opp_largest == opp_total {
-        return -WIN_SCORE + pos.turn as i32;
+        return -MATE_SCORE + pos.turn as i32;
     }
 
     let own_components = pos.component_count(perspective);
@@ -305,18 +275,11 @@ pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
     let mut own_mobility = 0i32;
     let mut opp_mobility = 0i32;
     if need_mobility {
-        let saved = pos.player;
         let mut tmp = MoveList::new();
-
-        pos.player = perspective;
-        pos.generate_moves(&mut tmp);
+        pos.generate_moves_for(perspective, &mut tmp);
         own_mobility = tmp.len as i32;
-
-        pos.player = opp;
-        pos.generate_moves(&mut tmp);
+        pos.generate_moves_for(opp, &mut tmp);
         opp_mobility = tmp.len as i32;
-
-        pos.player = saved;
     }
 
     // Base score (always applied)
@@ -338,20 +301,6 @@ pub fn evaluate(pos: &mut Position, perspective: u8, depth_hint: i32) -> i32 {
     score += (w.w_late_links      * (own_links    - opp_links)      * eg_256) / 256;
     if need_mobility {
         score += (w.w_late_mobility * (own_mobility - opp_mobility) * eg_256) / 256;
-    }
-
-    // One-move connect bonus (only in endgame-ish positions)
-    if allow_expensive && eg_256 > 100 {
-        if own_components <= 2 && own_count <= 8 {
-            if has_one_move_connect(pos, perspective, 6) {
-                score += w.connect_bonus;
-            }
-        }
-        if opp_components <= 2 && opp_count <= 8 {
-            if has_one_move_connect(pos, opp, 6) {
-                score -= w.connect_bonus;
-            }
-        }
     }
 
     score
