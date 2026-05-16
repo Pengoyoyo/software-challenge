@@ -274,12 +274,12 @@ pub struct Position {
     // comp_id[player][sq]: 0 = not this player, 1..n = component id
     pub comp_id: [[u8; 100]; 3],
     // comp_size[player][id]: number of pieces in component id
-    pub comp_size: [[u8; 8]; 3],
+    pub comp_size: [[u8; 17]; 3],
     // comp_value[player][id]: sum of fish values in component id
-    pub comp_value: [[u16; 8]; 3],
+    pub comp_value: [[u16; 17]; 3],
     // comp_sum_x/y[player][id]: sum of coordinates for centroid
-    pub comp_sum_x: [[u16; 8]; 3],
-    pub comp_sum_y: [[u16; 8]; 3],
+    pub comp_sum_x: [[u16; 17]; 3],
+    pub comp_sum_y: [[u16; 17]; 3],
     // n_comps[player]: active component count (id 0 unused)
     pub n_comps: [u8; 3],
 }
@@ -337,10 +337,10 @@ impl Default for Position {
             hash: 0,
             connected_since: [None; 2],
             comp_id: [[0; 100]; 3],
-            comp_size: [[0; 8]; 3],
-            comp_value: [[0; 8]; 3],
-            comp_sum_x: [[0; 8]; 3],
-            comp_sum_y: [[0; 8]; 3],
+            comp_size: [[0; 17]; 3],
+            comp_value: [[0; 17]; 3],
+            comp_sum_x: [[0; 17]; 3],
+            comp_sum_y: [[0; 17]; 3],
             n_comps: [0; 3],
         }
     }
@@ -478,17 +478,17 @@ impl Position {
 
     /// Rebuild component data for a player from current bitboards.
     /// Called in recompute_caches and after make_move/unmake_move for affected players.
-    /// Time: O(pieces) where pieces <= 8, so this is extremely fast.
+    /// Time: O(pieces) where pieces <= 16, effectively constant.
     fn _rebuild_components(&mut self, player: u8) {
         let p = player as usize;
         let pieces_bb = if player == ONE { self.bb_one } else { self.bb_two };
 
         self.n_comps[p] = 0;
         self.comp_id[p] = [0; 100];
-        self.comp_size[p] = [0; 8];
-        self.comp_value[p] = [0; 8];
-        self.comp_sum_x[p] = [0; 8];
-        self.comp_sum_y[p] = [0; 8];
+        self.comp_size[p] = [0; 17];
+        self.comp_value[p] = [0; 17];
+        self.comp_sum_x[p] = [0; 17];
+        self.comp_sum_y[p] = [0; 17];
 
         if pieces_bb == 0 {
             return;
@@ -865,8 +865,8 @@ impl Position {
             return 0;
         }
 
-        // Compute centroids from pre-summed component data
-        let mut centroids = [(0i32, 0i32); 8];
+        // Compute centroids from pre-summed component data (max 16 pieces = 16 components)
+        let mut centroids = [(0i32, 0i32); 16];
         for id in 1..=n {
             let size = self.comp_size[p][id] as i32;
             let cx = (self.comp_sum_x[p][id] as i32 + size / 2) / size;

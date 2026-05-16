@@ -20,6 +20,10 @@ path = "src/bin/selfplay.rs"
 name = "benchmark"
 path = "benches/benchmark.rs"
 
+[[bin]]
+name = "datagen"
+path = "src/bin/datagen.rs"
+
 [dependencies]
 socha = { git = "https://github.com/simoncreates/socha.git" }
 log = "0.4"
