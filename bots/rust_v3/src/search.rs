@@ -8,10 +8,10 @@ use crate::tt::{TranspositionTable, EXACT, LOWER, UPPER};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MAX_PLY: usize = 128;
-const TT_MB: usize = 128; // bumped from 96
+const TT_MB: usize = 256; // bumped from 128
 
 // Search pruning / reduction parameters
-const ASP_WINDOW: i32 = 80;
+const ASP_WINDOW: i32 = 300;
 const NMP_MIN_DEPTH: i32 = 3;
 const NMP_R: i32 = 2;
 const NMP_MIN_PIECES: u16 = 6;
@@ -27,7 +27,7 @@ const MULTICUT_DEPTH: i32 = 9;
 const MULTICUT_MOVES: usize = 10;
 const MULTICUT_REQUIRED: usize = 4;
 const QSEARCH_CAP: i32 = 4;
-const Q_DELTA: i32 = 160;
+const Q_DELTA: i32 = 5000;
 
 // Singular extension parameters
 const SE_MIN_DEPTH: i32 = 6;
@@ -171,7 +171,6 @@ pub struct SearchEngine {
     pub tt: TranspositionTable,
     history: [[i16; 100]; 100], // i16 for smaller cache footprint
     killers: [[u16; 2]; MAX_PLY],
-    counter_moves: [[u16; 100]; 100],
     tt_hits: u64,
 }
 
@@ -181,7 +180,6 @@ impl SearchEngine {
             tt: TranspositionTable::new(TT_MB),
             history: [[0; 100]; 100],
             killers: [[0; 2]; MAX_PLY],
-            counter_moves: [[0; 100]; 100],
             tt_hits: 0,
         }
     }
@@ -209,7 +207,7 @@ impl SearchEngine {
     // ── Move ordering score ────────────────────────────────────────────────────
 
     fn score_move(&self, pos: &Position, mv: Move, player: u8,
-        tt_move: u16, k1: u16, k2: u16, counter: u16) -> i32
+        tt_move: u16, k1: u16, k2: u16) -> i32
     {
         let t = get_tables();
         let encoded = mv.encode();
@@ -223,7 +221,6 @@ impl SearchEngine {
         }
         if k1 != 0 && k1 == encoded { score += 2_000_000; }
         else if k2 != 0 && k2 == encoded { score += 1_500_000; }
-        if counter != 0 && counter == encoded { score += 1_200_000; }
 
         score += 800 * pos.local_connectivity_swing(mv, player);
         score += self.history[mv.from as usize][mv.to as usize] as i32;
@@ -234,10 +231,10 @@ impl SearchEngine {
     }
 
     fn order_moves(&self, pos: &Position, player: u8, moves: &mut MoveList,
-        scores: &mut [i32; 256], tt_move: u16, k1: u16, k2: u16, counter: u16)
+        scores: &mut [i32; 256], tt_move: u16, k1: u16, k2: u16)
     {
         for i in 0..moves.len {
-            scores[i] = self.score_move(pos, moves.moves[i], player, tt_move, k1, k2, counter);
+            scores[i] = self.score_move(pos, moves.moves[i], player, tt_move, k1, k2);
         }
         for i in 1..moves.len {
             let mv = moves.moves[i];
@@ -255,6 +252,7 @@ impl SearchEngine {
 
     // ── Public search entry point ──────────────────────────────────────────────
 
+    #[allow(unused_assignments)]
     pub fn search(&mut self, pos: &mut Position, deadline: Instant) -> SearchResult {
         self.tt.new_search();
         self.decay_histories();
@@ -297,7 +295,7 @@ impl SearchEngine {
                 let tt_move = self.tt.best_move(pos.hash);
                 let mut scores = [0i32; 256];
                 self.order_moves(pos, pos.player, &mut root_moves, &mut scores,
-                    tt_move, self.killers[0][0], self.killers[0][1], 0);
+                    tt_move, self.killers[0][0], self.killers[0][1]);
 
                 let player = pos.player;
                 let opp = opponent(player);
@@ -403,6 +401,7 @@ impl SearchEngine {
 
     // ── Pondering ─────────────────────────────────────────────────────────────
 
+    #[allow(dead_code, unused_assignments)]
     pub fn search_ponder(&mut self, pos: &mut Position, cancel: &ComCancelHandler) {
         self.tt.new_search();
         let far_future = Instant::now() + Duration::from_secs(1000);
@@ -427,7 +426,7 @@ impl SearchEngine {
                 let tt_move = self.tt.best_move(pos.hash);
                 let mut scores = [0i32; 256];
                 self.order_moves(pos, pos.player, &mut root_moves, &mut scores,
-                    tt_move, self.killers[0][0], self.killers[0][1], 0);
+                    tt_move, self.killers[0][0], self.killers[0][1]);
 
                 let player = pos.player;
                 let opp = opponent(player);
@@ -577,13 +576,9 @@ impl SearchEngine {
         let ply_clamped = ply.min(MAX_PLY - 1);
         let k1 = self.killers[ply_clamped][0];
         let k2 = self.killers[ply_clamped][1];
-        let counter = if prev_move != 0 {
-            let pm = Move::decode(prev_move);
-            self.counter_moves[pm.from as usize][pm.to as usize]
-        } else { 0 };
 
         let mut scores = [0i32; 256];
-        self.order_moves(pos, player, &mut moves, &mut scores, tt_move, k1, k2, counter);
+        self.order_moves(pos, player, &mut moves, &mut scores, tt_move, k1, k2);
 
         // ── Multi-Cut ─────────────────────────────────────────────────────────
         if !PV && cut_node && depth >= MULTICUT_DEPTH && static_eval >= beta - 220 && moves.len >= 12 {
@@ -708,10 +703,6 @@ impl SearchEngine {
             if score > best_score { best_score = score; best_move = mv; }
             if score > alpha {
                 alpha = score;
-                if prev_move != 0 {
-                    let pm = Move::decode(prev_move);
-                    self.counter_moves[pm.from as usize][pm.to as usize] = mv.encode();
-                }
             }
             if alpha >= beta {
                 if quiet {

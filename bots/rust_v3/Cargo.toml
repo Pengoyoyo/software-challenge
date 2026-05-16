@@ -2,6 +2,23 @@
 name = "piranhas-bot-v2"
 version = "0.1.0"
 edition = "2021"
+autobenches = false
+
+[lib]
+name = "piranhas_bot_v2"
+path = "src/lib.rs"
+
+[[bin]]
+name = "piranhas-bot-v2"
+path = "src/main.rs"
+
+[[bin]]
+name = "selfplay"
+path = "src/bin/selfplay.rs"
+
+[[bin]]
+name = "benchmark"
+path = "benches/benchmark.rs"
 
 [dependencies]
 socha = { git = "https://github.com/simoncreates/socha.git" }
