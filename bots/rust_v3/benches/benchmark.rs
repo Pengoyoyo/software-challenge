@@ -17,7 +17,7 @@ fn bench_eval(n: usize) -> f64 {
     let pos = setup_midgame();
     let t0 = Instant::now();
     for _ in 0..n {
-        let _ = evaluate(&pos, ONE, 5);
+        let _ = evaluate(&pos, ONE, 5, true);
     }
     t0.elapsed().as_secs_f64() * 1000.0
 }

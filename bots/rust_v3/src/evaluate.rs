@@ -1,4 +1,3 @@
-#[cfg(not(has_nnue))]
 use crate::bitboard::{get_neighbor_masks, pop_lsb};
 use crate::board::{
     get_tables, opponent, piece_owner, MoveList, Position, ONE, TWO,
@@ -112,15 +111,14 @@ fn run_nnue(board: &[u8; 100], player: u8) -> i32 {
         out += l.clamp(0.0, 1.0) * w.out_w[n];
     }
 
-    // Invert tanh normalization: label = tanh(score/600)
-    (out.clamp(-0.9999, 0.9999).atanh() * 600.0) as i32
+    // Invert tanh normalization: label = tanh(score/3000)
+    (out.clamp(-0.9999, 0.9999).atanh() * 3000.0) as i32
 }
 
 // ─── Score constants ──────────────────────────────────────────────────────────
 pub const MATE_SCORE: i32 = 900_000;
 
 // ─── Evaluation weights (hand-crafted fallback) ───────────────────────────────
-#[cfg(not(has_nnue))]
 #[derive(Clone, Copy)]
 struct EvalWeights {
     w_largest: i32,
@@ -137,7 +135,6 @@ struct EvalWeights {
     w_late_mobility: i32,
 }
 
-#[cfg(not(has_nnue))]
 const DEFAULT_WEIGHTS: EvalWeights = EvalWeights {
     w_largest: 543,
     w_components: 160,
@@ -153,7 +150,6 @@ const DEFAULT_WEIGHTS: EvalWeights = EvalWeights {
     w_late_mobility: 12,
 };
 
-#[cfg(not(has_nnue))]
 #[inline]
 fn eval_weights() -> &'static EvalWeights {
     &DEFAULT_WEIGHTS
@@ -210,7 +206,6 @@ pub fn terminal_swarm_score(pos: &Position, perspective: u8, ply: i32) -> i32 {
 
 // ─── Shape links + center sum (bitboard-based, hand-crafted eval only) ───────
 
-#[cfg(not(has_nnue))]
 fn shape_links(pos: &Position, player: u8, center_sum: &mut i32) -> i32 {
     let t = get_tables();
     let nb = get_neighbor_masks();
@@ -283,74 +278,71 @@ pub fn has_one_move_connect(pos: &Position, player: u8, max_checks: usize) -> bo
     false
 }
 
-// ─── Main evaluation ─────────────────────────────────────────────────────────
+// ─── Shared terminal/early-exit checks ───────────────────────────────────────
 
-pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32) -> i32 {
+fn eval_terminals(pos: &Position, perspective: u8) -> Option<i32> {
     let opp = opponent(perspective);
 
-    // Terminal: game over at turn 60
     if pos.turn >= 60 {
         let red_swarm = pos.largest_component_value(ONE);
         let blue_swarm = pos.largest_component_value(TWO);
 
         if red_swarm > blue_swarm {
-            return if perspective == ONE {
+            return Some(if perspective == ONE {
                 MATE_SCORE - pos.turn as i32
             } else {
                 -MATE_SCORE + pos.turn as i32
-            };
+            });
         }
         if blue_swarm > red_swarm {
-            return if perspective == TWO {
+            return Some(if perspective == TWO {
                 MATE_SCORE - pos.turn as i32
             } else {
                 -MATE_SCORE + pos.turn as i32
-            };
+            });
         }
 
-        // Tiebreaker: first complete school
         match (pos.connected_since[0], pos.connected_since[1]) {
             (Some(r), Some(b)) if r < b => {
-                return if perspective == ONE { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+                return Some(if perspective == ONE { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 });
             }
             (Some(r), Some(b)) if b < r => {
-                return if perspective == TWO { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+                return Some(if perspective == TWO { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 });
             }
             (Some(_), None) => {
-                return if perspective == ONE { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+                return Some(if perspective == ONE { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 });
             }
             (None, Some(_)) => {
-                return if perspective == TWO { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 };
+                return Some(if perspective == TWO { MATE_SCORE - pos.turn as i32 } else { -MATE_SCORE + pos.turn as i32 });
             }
             _ => {}
         }
 
         if pos.total_piece_value(ONE) > pos.total_piece_value(TWO) {
-            return if perspective == ONE {
+            return Some(if perspective == ONE {
                 MATE_SCORE - pos.turn as i32
             } else {
                 -MATE_SCORE + pos.turn as i32
-            };
+            });
         }
         if pos.total_piece_value(TWO) > pos.total_piece_value(ONE) {
-            return if perspective == TWO {
+            return Some(if perspective == TWO {
                 MATE_SCORE - pos.turn as i32
             } else {
                 -MATE_SCORE + pos.turn as i32
-            };
+            });
         }
-        return 0;
+        return Some(0);
     }
 
     let own_count = if perspective == ONE { pos.one_count } else { pos.two_count };
     let opp_count = if perspective == ONE { pos.two_count } else { pos.one_count };
 
-    // One side eliminated
     if own_count == 0 && opp_count > 0 {
-        return -MATE_SCORE + pos.turn as i32;
+        return Some(-MATE_SCORE + pos.turn as i32);
     }
     if opp_count == 0 && own_count > 0 {
-        return MATE_SCORE - pos.turn as i32;
+        return Some(MATE_SCORE - pos.turn as i32);
     }
 
     let own_total = pos.total_piece_value(perspective);
@@ -358,70 +350,89 @@ pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32) -> i32 {
     let own_largest = pos.largest_component_value(perspective);
     let opp_largest = pos.largest_component_value(opp);
 
-    // Win if already connected
     if own_total > 0 && own_largest == own_total {
-        return MATE_SCORE - pos.turn as i32;
+        return Some(MATE_SCORE - pos.turn as i32);
     }
     if opp_total > 0 && opp_largest == opp_total {
-        return -MATE_SCORE + pos.turn as i32;
+        return Some(-MATE_SCORE + pos.turn as i32);
     }
 
-    // ── NNUE evaluation (when weights.bin is embedded at compile time) ──────────
+    None
+}
+
+// ─── Hand-crafted evaluation ──────────────────────────────────────────────────
+
+fn hand_crafted_eval(pos: &Position, perspective: u8, depth_hint: i32) -> i32 {
+    let opp = opponent(perspective);
+
+    let own_count = if perspective == ONE { pos.one_count } else { pos.two_count };
+    let opp_count = if perspective == ONE { pos.two_count } else { pos.one_count };
+    let own_total = pos.total_piece_value(perspective);
+    let opp_total = pos.total_piece_value(opp);
+    let own_largest = pos.largest_component_value(perspective);
+    let opp_largest = pos.largest_component_value(opp);
+
+    let own_components = pos.component_count(perspective);
+    let opp_components = pos.component_count(opp);
+    let own_spread = pos.component_spread(perspective);
+    let opp_spread = pos.component_spread(opp);
+
+    let mut own_center = 0i32;
+    let mut opp_center = 0i32;
+    let own_links = shape_links(pos, perspective, &mut own_center);
+    let opp_links = shape_links(pos, opp, &mut opp_center);
+
+    let total_pieces = (own_count + opp_count) as i32;
+    let piece_phase = (((16 - total_pieces) * 256) / 12).clamp(0, 256);
+    let turn_phase  = (((pos.turn as i32 - 20) * 256) / 40).clamp(0, 256);
+    let eg_256 = piece_phase.max(turn_phase);
+
+    let allow_expensive = depth_hint <= 3;
+    let need_mobility = allow_expensive
+        && (eg_256 > 80 || own_components <= 3 || opp_components <= 3);
+
+    let mut own_mobility = 0i32;
+    let mut opp_mobility = 0i32;
+    if need_mobility {
+        let mut tmp = MoveList::new();
+        pos.generate_moves_for(perspective, &mut tmp);
+        own_mobility = tmp.len as i32;
+        pos.generate_moves_for(opp, &mut tmp);
+        opp_mobility = tmp.len as i32;
+    }
+
+    let w = eval_weights();
+    let mut score = 0i32;
+    score += w.w_largest    * (own_largest  - opp_largest);
+    score += w.w_components * (opp_components - own_components);
+    score += w.w_spread     * (opp_spread   - own_spread);
+    score += w.w_material   * (own_total    - opp_total);
+    score += w.w_links      * (own_links    - opp_links);
+    score += w.w_center     * (own_center   - opp_center);
+    if need_mobility {
+        score += w.w_mobility * (own_mobility - opp_mobility);
+    }
+    score += (w.w_late_largest    * (own_largest  - opp_largest)    * eg_256) / 256;
+    score += (w.w_late_components * (opp_components - own_components) * eg_256) / 256;
+    score += (w.w_late_spread     * (opp_spread   - own_spread)     * eg_256) / 256;
+    score += (w.w_late_links      * (own_links    - opp_links)      * eg_256) / 256;
+    if need_mobility {
+        score += (w.w_late_mobility * (own_mobility - opp_mobility) * eg_256) / 256;
+    }
+    score
+}
+
+// ─── Main evaluation ─────────────────────────────────────────────────────────
+
+pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32, use_nnue: bool) -> i32 {
+    if let Some(s) = eval_terminals(pos, perspective) {
+        return s;
+    }
+
     #[cfg(has_nnue)]
-    {
+    if use_nnue {
         return run_nnue(&pos.board, perspective);
     }
 
-    // ── Hand-crafted evaluation (fallback without weights.bin) ───────────────
-    #[cfg(not(has_nnue))]
-    {
-        let own_components = pos.component_count(perspective);
-        let opp_components = pos.component_count(opp);
-        let own_spread = pos.component_spread(perspective);
-        let opp_spread = pos.component_spread(opp);
-
-        let mut own_center = 0i32;
-        let mut opp_center = 0i32;
-        let own_links = shape_links(pos, perspective, &mut own_center);
-        let opp_links = shape_links(pos, opp, &mut opp_center);
-
-        let total_pieces = (own_count + opp_count) as i32;
-        let piece_phase = (((16 - total_pieces) * 256) / 12).clamp(0, 256);
-        let turn_phase  = (((pos.turn as i32 - 20) * 256) / 40).clamp(0, 256);
-        let eg_256 = piece_phase.max(turn_phase);
-
-        let allow_expensive = depth_hint <= 3;
-        let need_mobility = allow_expensive
-            && (eg_256 > 80 || own_components <= 3 || opp_components <= 3);
-
-        let mut own_mobility = 0i32;
-        let mut opp_mobility = 0i32;
-        if need_mobility {
-            let mut tmp = MoveList::new();
-            pos.generate_moves_for(perspective, &mut tmp);
-            own_mobility = tmp.len as i32;
-            pos.generate_moves_for(opp, &mut tmp);
-            opp_mobility = tmp.len as i32;
-        }
-
-        let w = eval_weights();
-        let mut score = 0i32;
-        score += w.w_largest    * (own_largest  - opp_largest);
-        score += w.w_components * (opp_components - own_components);
-        score += w.w_spread     * (opp_spread   - own_spread);
-        score += w.w_material   * (own_total    - opp_total);
-        score += w.w_links      * (own_links    - opp_links);
-        score += w.w_center     * (own_center   - opp_center);
-        if need_mobility {
-            score += w.w_mobility * (own_mobility - opp_mobility);
-        }
-        score += (w.w_late_largest    * (own_largest  - opp_largest)    * eg_256) / 256;
-        score += (w.w_late_components * (opp_components - own_components) * eg_256) / 256;
-        score += (w.w_late_spread     * (opp_spread   - own_spread)     * eg_256) / 256;
-        score += (w.w_late_links      * (own_links    - opp_links)      * eg_256) / 256;
-        if need_mobility {
-            score += (w.w_late_mobility * (own_mobility - opp_mobility) * eg_256) / 256;
-        }
-        score
-    }
+    hand_crafted_eval(pos, perspective, depth_hint)
 }

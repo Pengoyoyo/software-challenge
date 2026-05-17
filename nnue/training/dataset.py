@@ -13,7 +13,7 @@ import torch
 from torch.utils.data import Dataset
 
 SAMPLE_BYTES = 107
-LABEL_SCALE = 600.0  # tanh(score / scale) → [-1, 1]
+LABEL_SCALE = 3000.0  # tanh(score / scale) → [-1, 1]
 
 # piece index → one-hot position (0=empty, 1-3=own_s/m/l, 4-6=opp_s/m/l, 7=squid)
 _OWN_PIECE_ONE = {1: 1, 2: 2, 3: 3}   # player ONE's own pieces
