@@ -21,7 +21,7 @@ from model import NNUE
 
 def export(args):
     model = NNUE(l1_size=args.l1, l2_size=args.l2)
-    model.load_state_dict(torch.load(args.model, map_location="cpu"))
+    model.load_state_dict(torch.load(args.model, map_location="cpu", weights_only=True))
     model.eval()
 
     tensors = [

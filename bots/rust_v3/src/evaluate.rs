@@ -1,12 +1,126 @@
+#[cfg(not(has_nnue))]
 use crate::bitboard::{get_neighbor_masks, pop_lsb};
 use crate::board::{
     get_tables, opponent, piece_owner, MoveList, Position, ONE, TWO,
 };
 
+// ─── NNUE (embedded when src/weights.bin is present at compile time) ──────────
+
+#[cfg(has_nnue)]
+static NNUE_BYTES: &[u8] = include_bytes!("weights.bin");
+
+#[cfg(has_nnue)]
+const NNUE_L1: usize = 256;
+#[cfg(has_nnue)]
+const NNUE_L2: usize = 32;
+#[cfg(has_nnue)]
+const NNUE_IN: usize = 800;
+
+#[cfg(has_nnue)]
+struct NnueWeights {
+    l1_w: Vec<f32>, // [NNUE_IN * NNUE_L1]
+    l1_b: Vec<f32>, // [NNUE_L1]
+    l2_w: Vec<f32>, // [NNUE_L1 * NNUE_L2]
+    l2_b: Vec<f32>, // [NNUE_L2]
+    out_w: Vec<f32>, // [NNUE_L2]
+    out_b: f32,
+}
+
+#[cfg(has_nnue)]
+fn nnue_weights() -> &'static NnueWeights {
+    use std::sync::OnceLock;
+    static W: OnceLock<NnueWeights> = OnceLock::new();
+    W.get_or_init(|| {
+        let floats: Vec<f32> = NNUE_BYTES
+            .chunks_exact(4)
+            .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            .collect();
+        let mut p = 0usize;
+
+        // Reads n floats starting at p, advances p
+        macro_rules! take {
+            ($n:expr) => {{
+                let v = floats[p..p + $n].to_vec();
+                p += $n;
+                v
+            }};
+        }
+
+        // PyTorch exports [out, in]; transpose to [in, out] for fast accumulation
+        let l1r = take!(NNUE_L1 * NNUE_IN);
+        let l1_b = take!(NNUE_L1);
+        let l2r = take!(NNUE_L2 * NNUE_L1);
+        let l2_b = take!(NNUE_L2);
+        let out_w = take!(NNUE_L2);
+        let out_b = floats[p];
+
+        let mut l1_w = vec![0.0f32; NNUE_IN * NNUE_L1];
+        for i in 0..NNUE_L1 {
+            for j in 0..NNUE_IN {
+                l1_w[j * NNUE_L1 + i] = l1r[i * NNUE_IN + j];
+            }
+        }
+        let mut l2_w = vec![0.0f32; NNUE_L1 * NNUE_L2];
+        for i in 0..NNUE_L2 {
+            for j in 0..NNUE_L1 {
+                l2_w[j * NNUE_L2 + i] = l2r[i * NNUE_L1 + j];
+            }
+        }
+
+        NnueWeights { l1_w, l1_b, l2_w, l2_b, out_w, out_b }
+    })
+}
+
+#[cfg(has_nnue)]
+fn run_nnue(board: &[u8; 100], player: u8) -> i32 {
+    let w = nnue_weights();
+
+    // Build L1 accumulator from board features (player-relative)
+    let mut acc = [0.0f32; NNUE_L1];
+    acc.copy_from_slice(&w.l1_b);
+
+    for sq in 0..100usize {
+        let piece = board[sq];
+        if piece == 0 { continue; }
+        let feat_type: usize = match player {
+            1 => match piece { 1=>1, 2=>2, 3=>3, 4=>4, 5=>5, 6=>6, 7=>7, _=>continue },
+            2 => match piece { 4=>1, 5=>2, 6=>3, 1=>4, 2=>5, 3=>6, 7=>7, _=>continue },
+            _ => continue,
+        };
+        let feat = sq * 8 + feat_type;
+        let row = &w.l1_w[feat * NNUE_L1..(feat + 1) * NNUE_L1];
+        for (a, &ww) in acc.iter_mut().zip(row) {
+            *a += ww;
+        }
+    }
+
+    // L1 → L2
+    let mut l2 = [0.0f32; NNUE_L2];
+    l2.copy_from_slice(&w.l2_b);
+    for (n, &a) in acc.iter().enumerate() {
+        let act = a.clamp(0.0, 1.0);
+        if act == 0.0 { continue; }
+        let row = &w.l2_w[n * NNUE_L2..(n + 1) * NNUE_L2];
+        for (o, &ww) in l2.iter_mut().zip(row) {
+            *o += act * ww;
+        }
+    }
+
+    // L2 → output
+    let mut out = w.out_b;
+    for (n, &l) in l2.iter().enumerate() {
+        out += l.clamp(0.0, 1.0) * w.out_w[n];
+    }
+
+    // Invert tanh normalization: label = tanh(score/600)
+    (out.clamp(-0.9999, 0.9999).atanh() * 600.0) as i32
+}
+
 // ─── Score constants ──────────────────────────────────────────────────────────
 pub const MATE_SCORE: i32 = 900_000;
 
-// ─── Evaluation weights ───────────────────────────────────────────────────────
+// ─── Evaluation weights (hand-crafted fallback) ───────────────────────────────
+#[cfg(not(has_nnue))]
 #[derive(Clone, Copy)]
 struct EvalWeights {
     w_largest: i32,
@@ -23,8 +137,8 @@ struct EvalWeights {
     w_late_mobility: i32,
 }
 
+#[cfg(not(has_nnue))]
 const DEFAULT_WEIGHTS: EvalWeights = EvalWeights {
-    // Deviations from C++ are intentional; see plan for rationale.
     w_largest: 543,
     w_components: 160,
     w_spread: 58,
@@ -39,6 +153,7 @@ const DEFAULT_WEIGHTS: EvalWeights = EvalWeights {
     w_late_mobility: 12,
 };
 
+#[cfg(not(has_nnue))]
 #[inline]
 fn eval_weights() -> &'static EvalWeights {
     &DEFAULT_WEIGHTS
@@ -93,8 +208,9 @@ pub fn terminal_swarm_score(pos: &Position, perspective: u8, ply: i32) -> i32 {
     0
 }
 
-// ─── Shape links + center sum (bitboard-based) ────────────────────────────────
+// ─── Shape links + center sum (bitboard-based, hand-crafted eval only) ───────
 
+#[cfg(not(has_nnue))]
 fn shape_links(pos: &Position, player: u8, center_sum: &mut i32) -> i32 {
     let t = get_tables();
     let nb = get_neighbor_masks();
@@ -170,7 +286,6 @@ pub fn has_one_move_connect(pos: &Position, player: u8, max_checks: usize) -> bo
 // ─── Main evaluation ─────────────────────────────────────────────────────────
 
 pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32) -> i32 {
-    let w = eval_weights();
     let opp = opponent(perspective);
 
     // Terminal: game over at turn 60
@@ -251,57 +366,62 @@ pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32) -> i32 {
         return -MATE_SCORE + pos.turn as i32;
     }
 
-    let own_components = pos.component_count(perspective);
-    let opp_components = pos.component_count(opp);
-    let own_spread = pos.component_spread(perspective);
-    let opp_spread = pos.component_spread(opp);
-
-    let mut own_center = 0i32;
-    let mut opp_center = 0i32;
-    let own_links = shape_links(pos, perspective, &mut own_center);
-    let opp_links = shape_links(pos, opp, &mut opp_center);
-
-    // ── Tapered phase (fixed-point, 0=opening/256=endgame) ────────────────────
-    // Phase increases as pieces are captured and as the turn count rises.
-    let total_pieces = (own_count + opp_count) as i32;
-    let piece_phase = (((16 - total_pieces) * 256) / 12).clamp(0, 256); // 0 at 16 pieces, 256 at ≤4
-    let turn_phase  = (((pos.turn as i32 - 20) * 256) / 40).clamp(0, 256); // 0 before turn 20, 256 at turn 60
-    let eg_256 = piece_phase.max(turn_phase); // endgame factor 0–256
-
-    let allow_expensive = depth_hint <= 3;
-    let need_mobility = allow_expensive
-        && (eg_256 > 80 || own_components <= 3 || opp_components <= 3);
-
-    let mut own_mobility = 0i32;
-    let mut opp_mobility = 0i32;
-    if need_mobility {
-        let mut tmp = MoveList::new();
-        pos.generate_moves_for(perspective, &mut tmp);
-        own_mobility = tmp.len as i32;
-        pos.generate_moves_for(opp, &mut tmp);
-        opp_mobility = tmp.len as i32;
+    // ── NNUE evaluation (when weights.bin is embedded at compile time) ──────────
+    #[cfg(has_nnue)]
+    {
+        return run_nnue(&pos.board, perspective);
     }
 
-    // Base score (always applied)
-    let mut score = 0i32;
-    score += w.w_largest    * (own_largest  - opp_largest);
-    score += w.w_components * (opp_components - own_components);
-    score += w.w_spread     * (opp_spread   - own_spread);
-    score += w.w_material   * (own_total    - opp_total);
-    score += w.w_links      * (own_links    - opp_links);
-    score += w.w_center     * (own_center   - opp_center);
-    if need_mobility {
-        score += w.w_mobility * (own_mobility - opp_mobility);
-    }
+    // ── Hand-crafted evaluation (fallback without weights.bin) ───────────────
+    #[cfg(not(has_nnue))]
+    {
+        let own_components = pos.component_count(perspective);
+        let opp_components = pos.component_count(opp);
+        let own_spread = pos.component_spread(perspective);
+        let opp_spread = pos.component_spread(opp);
 
-    // Endgame bonus (tapered: scaled by eg_256/256)
-    score += (w.w_late_largest    * (own_largest  - opp_largest)    * eg_256) / 256;
-    score += (w.w_late_components * (opp_components - own_components) * eg_256) / 256;
-    score += (w.w_late_spread     * (opp_spread   - own_spread)     * eg_256) / 256;
-    score += (w.w_late_links      * (own_links    - opp_links)      * eg_256) / 256;
-    if need_mobility {
-        score += (w.w_late_mobility * (own_mobility - opp_mobility) * eg_256) / 256;
-    }
+        let mut own_center = 0i32;
+        let mut opp_center = 0i32;
+        let own_links = shape_links(pos, perspective, &mut own_center);
+        let opp_links = shape_links(pos, opp, &mut opp_center);
 
-    score
+        let total_pieces = (own_count + opp_count) as i32;
+        let piece_phase = (((16 - total_pieces) * 256) / 12).clamp(0, 256);
+        let turn_phase  = (((pos.turn as i32 - 20) * 256) / 40).clamp(0, 256);
+        let eg_256 = piece_phase.max(turn_phase);
+
+        let allow_expensive = depth_hint <= 3;
+        let need_mobility = allow_expensive
+            && (eg_256 > 80 || own_components <= 3 || opp_components <= 3);
+
+        let mut own_mobility = 0i32;
+        let mut opp_mobility = 0i32;
+        if need_mobility {
+            let mut tmp = MoveList::new();
+            pos.generate_moves_for(perspective, &mut tmp);
+            own_mobility = tmp.len as i32;
+            pos.generate_moves_for(opp, &mut tmp);
+            opp_mobility = tmp.len as i32;
+        }
+
+        let w = eval_weights();
+        let mut score = 0i32;
+        score += w.w_largest    * (own_largest  - opp_largest);
+        score += w.w_components * (opp_components - own_components);
+        score += w.w_spread     * (opp_spread   - own_spread);
+        score += w.w_material   * (own_total    - opp_total);
+        score += w.w_links      * (own_links    - opp_links);
+        score += w.w_center     * (own_center   - opp_center);
+        if need_mobility {
+            score += w.w_mobility * (own_mobility - opp_mobility);
+        }
+        score += (w.w_late_largest    * (own_largest  - opp_largest)    * eg_256) / 256;
+        score += (w.w_late_components * (opp_components - own_components) * eg_256) / 256;
+        score += (w.w_late_spread     * (opp_spread   - own_spread)     * eg_256) / 256;
+        score += (w.w_late_links      * (own_links    - opp_links)      * eg_256) / 256;
+        if need_mobility {
+            score += (w.w_late_mobility * (own_mobility - opp_mobility) * eg_256) / 256;
+        }
+        score
+    }
 }

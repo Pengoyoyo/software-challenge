@@ -3,6 +3,7 @@ name = "piranhas-bot-v2"
 version = "0.1.0"
 edition = "2021"
 autobenches = false
+build = "build.rs"
 
 [lib]
 name = "piranhas_bot_v2"
