@@ -1,9 +1,9 @@
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
 
 cimport cython
-from libc.math cimport sqrt, isnan, isinf
 
-from .board cimport CBoard, get_team, get_value, int8, uint64
+from .board cimport CBoard, CMove, CMoveList, get_team, get_value, int8, uint64
+from .board cimport c_generate_moves, c_apply_move_inplace, c_undo_move
 
 DEF WIN_SCORE = 100000.0
 DEF TEAM_NONE = 0
@@ -16,18 +16,21 @@ cdef int[8][2] NEIGHBOR_OFFSETS = [
     [1, -1],  [1, 0],  [1, 1]
 ]
 
-# Runtime-tunable evaluation weights (used by GA).
-cdef double DEFAULT_W_BEST_SWARM = 27.48
-cdef double DEFAULT_W_SWARM_COUNT = 3.76
-cdef double DEFAULT_W_MATERIAL = 9.06
-cdef double DEFAULT_W_ISOLATED = 0.42
-cdef double DEFAULT_W_DISTANCE = 0.62
+DEF W_BEST_SWARM  = 54.0
+DEF W_SWARM_COUNT = 16.0
+DEF W_MATERIAL    = 23.0
+DEF W_ISOLATED    = 6.0
+DEF W_DISTANCE    = 2.0
+DEF W_LINKS       = 2.0
+DEF W_SPREAD      = 5.8
 
-cdef double W_BEST_SWARM = 27.48
-cdef double W_SWARM_COUNT = 3.76
-cdef double W_MATERIAL = 9.06
-cdef double W_ISOLATED = 0.42
-cdef double W_DISTANCE = 0.62
+DEF W_LATE_BEST_SWARM  = 15.0
+DEF W_LATE_SWARM_COUNT = 17.0
+DEF W_LATE_DISTANCE    = 12.0
+DEF W_LATE_LINKS       = 4.0
+DEF W_LATE_SPREAD      = 13.0
+
+DEF CONNECT_BONUS = 3768.0
 
 
 cdef struct SwarmData:
@@ -38,6 +41,7 @@ cdef struct SwarmData:
     double center_y
     uint64 best_swarm_mask_lo
     uint64 best_swarm_mask_hi
+    int spread
 
 
 cdef struct TeamStats:
@@ -55,6 +59,7 @@ cdef SwarmData compute_swarm_data(CBoard board, int team) noexcept:
     data.center_y = 4.5
     data.best_swarm_mask_lo = 0
     data.best_swarm_mask_hi = 0
+    data.spread = 0
 
     cdef bint[100] visited
     cdef int[100] queue_x
@@ -64,6 +69,8 @@ cdef SwarmData compute_swarm_data(CBoard board, int team) noexcept:
     cdef int swarm_value, swarm_size
     cdef int8 field
     cdef double sx, sy
+    cdef int centroid_x[16]
+    cdef int centroid_y[16]
 
     for i in range(100):
         visited[i] = False
@@ -121,6 +128,10 @@ cdef SwarmData compute_swarm_data(CBoard board, int team) noexcept:
                         queue_y[qback] = ny
                         qback += 1
 
+            if data.num_swarms <= 16 and swarm_size > 0:
+                centroid_x[data.num_swarms - 1] = <int>(sx / swarm_size + 0.5)
+                centroid_y[data.num_swarms - 1] = <int>(sy / swarm_size + 0.5)
+
             if swarm_value > data.best_value:
                 data.best_value = swarm_value
                 data.best_swarm_size = swarm_size
@@ -136,6 +147,25 @@ cdef SwarmData compute_swarm_data(CBoard board, int team) noexcept:
                         data.best_swarm_mask_lo |= (1ULL << bidx)
                     else:
                         data.best_swarm_mask_hi |= (1ULL << (bidx - 64))
+
+    cdef int n, gx, gy, dx, dy
+    n = data.num_swarms if data.num_swarms <= 16 else 16
+    if n >= 2:
+        gx = 0
+        gy = 0
+        for i in range(n):
+            gx += centroid_x[i]
+            gy += centroid_y[i]
+        gx //= n
+        gy //= n
+        for i in range(n):
+            dx = centroid_x[i] - gx
+            dy = centroid_y[i] - gy
+            if dx < 0:
+                dx = -dx
+            if dy < 0:
+                dy = -dy
+            data.spread += dx if dx > dy else dy
 
     return data
 
@@ -211,10 +241,52 @@ cdef TeamStats compute_team_stats(CBoard board, int team) noexcept:
 
 
 cdef inline bint c_is_connected(CBoard board, int team) noexcept:
-    cdef TeamStats data = compute_team_stats(board, team)
-    if data.piece_count == 0:
+    cdef int first_idx = -1
+    cdef int total = 0
+    cdef int idx
+    cdef int8 field
+
+    for idx in range(100):
+        field = board.fields[idx]
+        if get_team(field) == team:
+            if first_idx < 0:
+                first_idx = idx
+            total += 1
+
+    if total == 0:
         return True
-    return data.largest_value == data.total_value
+
+    cdef bint[100] visited
+    cdef int[100] queue
+    cdef int qfront = 0, qback = 0
+    cdef int reachable = 0
+    cdef int x, y, nx, ny, nidx, i
+
+    for idx in range(100):
+        visited[idx] = False
+
+    visited[first_idx] = True
+    queue[qback] = first_idx
+    qback += 1
+
+    while qfront < qback:
+        idx = queue[qfront]
+        qfront += 1
+        reachable += 1
+        x = idx // 10
+        y = idx - x * 10
+        for i in range(8):
+            nx = x + NEIGHBOR_OFFSETS[i][0]
+            ny = y + NEIGHBOR_OFFSETS[i][1]
+            if nx < 0 or nx >= 10 or ny < 0 or ny >= 10:
+                continue
+            nidx = nx * 10 + ny
+            if not visited[nidx] and get_team(board.fields[nidx]) == team:
+                visited[nidx] = True
+                queue[qback] = nidx
+                qback += 1
+
+    return reachable == total
 
 
 cdef bint c_try_terminal_eval(CBoard board, int our_team, double* out_score) noexcept:
@@ -256,41 +328,25 @@ cdef bint c_try_terminal_eval(CBoard board, int our_team, double* out_score) noe
     return False
 
 
-cpdef void set_eval_params(
-    double best_swarm,
-    double swarm_count,
-    double material,
-    double isolated,
-    double distance
-):
-    if (
-        isnan(best_swarm) or isinf(best_swarm) or
-        isnan(swarm_count) or isinf(swarm_count) or
-        isnan(material) or isinf(material) or
-        isnan(isolated) or isinf(isolated) or
-        isnan(distance) or isinf(distance)
-    ):
-        raise ValueError("All eval params must be finite numbers")
+cdef bint c_has_one_move_connect(CBoard board, int team, int piece_count) noexcept:
+    if piece_count > 8:
+        return False
 
-    global W_BEST_SWARM, W_SWARM_COUNT, W_MATERIAL, W_ISOLATED, W_DISTANCE
-    W_BEST_SWARM = best_swarm
-    W_SWARM_COUNT = swarm_count
-    W_MATERIAL = material
-    W_ISOLATED = isolated
-    W_DISTANCE = distance
+    cdef CMoveList moves
+    cdef int8 captured
+    cdef int i
+    cdef bint connected
 
+    c_generate_moves(board, team, &moves)
 
-cpdef void reset_eval_params():
-    global W_BEST_SWARM, W_SWARM_COUNT, W_MATERIAL, W_ISOLATED, W_DISTANCE
-    W_BEST_SWARM = DEFAULT_W_BEST_SWARM
-    W_SWARM_COUNT = DEFAULT_W_SWARM_COUNT
-    W_MATERIAL = DEFAULT_W_MATERIAL
-    W_ISOLATED = DEFAULT_W_ISOLATED
-    W_DISTANCE = DEFAULT_W_DISTANCE
+    for i in range(moves.count):
+        captured = c_apply_move_inplace(board, &moves.moves[i])
+        connected = c_is_connected(board, team)
+        c_undo_move(board, &moves.moves[i], captured)
+        if connected:
+            return True
 
-
-cpdef tuple get_eval_params():
-    return (W_BEST_SWARM, W_SWARM_COUNT, W_MATERIAL, W_ISOLATED, W_DISTANCE)
+    return False
 
 
 cdef double c_evaluate(CBoard board, int our_team) noexcept:
@@ -304,22 +360,18 @@ cdef double c_evaluate(CBoard board, int our_team) noexcept:
     if opp_data.num_swarms == 0:
         return WIN_SCORE
 
-    cdef double value = 0.0
-
-    value += (our_data.best_value - opp_data.best_value) * W_BEST_SWARM
-    value -= (our_data.num_swarms - 1) * W_SWARM_COUNT
-    value += (opp_data.num_swarms - 1) * W_SWARM_COUNT
-
     cdef int our_material = 0
     cdef int opp_material = 0
     cdef int our_piece_count = 0
     cdef int opp_piece_count = 0
     cdef int our_isolated = 0
     cdef int opp_isolated = 0
-    cdef double our_dist = 0.0
-    cdef double opp_dist = 0.0
-    cdef int x, y, idx, t, val
-    cdef double dx, dy
+    cdef int our_links = 0
+    cdef int opp_links = 0
+    cdef int our_dist = 0
+    cdef int opp_dist = 0
+    cdef int x, y, idx, t, val, nx, ny, nidx, i
+    cdef int dx, dy
     cdef int8 field
 
     for x in range(10):
@@ -337,18 +389,38 @@ cdef double c_evaluate(CBoard board, int our_team) noexcept:
                 our_material += val
                 our_piece_count += 1
                 if not is_in_best_swarm(&our_data, idx):
-                    dx = x - our_data.center_x
-                    dy = y - our_data.center_y
-                    our_dist += sqrt(dx * dx + dy * dy)
+                    dx = x - <int>our_data.center_x
+                    dy = y - <int>our_data.center_y
+                    if dx < 0: dx = -dx
+                    if dy < 0: dy = -dy
+                    our_dist += dx if dx > dy else dy
                     our_isolated += val
+                for i in range(8):
+                    nx = x + NEIGHBOR_OFFSETS[i][0]
+                    ny = y + NEIGHBOR_OFFSETS[i][1]
+                    if nx < 0 or nx >= 10 or ny < 0 or ny >= 10:
+                        continue
+                    nidx = nx * 10 + ny
+                    if nidx > idx and get_team(board.fields[nidx]) == our_team:
+                        our_links += 1
             elif t == opp_team:
                 opp_material += val
                 opp_piece_count += 1
                 if not is_in_best_swarm(&opp_data, idx):
-                    dx = x - opp_data.center_x
-                    dy = y - opp_data.center_y
-                    opp_dist += sqrt(dx * dx + dy * dy)
+                    dx = x - <int>opp_data.center_x
+                    dy = y - <int>opp_data.center_y
+                    if dx < 0: dx = -dx
+                    if dy < 0: dy = -dy
+                    opp_dist += dx if dx > dy else dy
                     opp_isolated += val
+                for i in range(8):
+                    nx = x + NEIGHBOR_OFFSETS[i][0]
+                    ny = y + NEIGHBOR_OFFSETS[i][1]
+                    if nx < 0 or nx >= 10 or ny < 0 or ny >= 10:
+                        continue
+                    nidx = nx * 10 + ny
+                    if nidx > idx and get_team(board.fields[nidx]) == opp_team:
+                        opp_links += 1
 
     if our_piece_count == 0 and opp_piece_count > 0:
         return -WIN_SCORE
@@ -375,11 +447,43 @@ cdef double c_evaluate(CBoard board, int our_team) noexcept:
             return -WIN_SCORE
         return 0.0
 
+    cdef double piece_phase = (16.0 - our_piece_count - opp_piece_count) / 12.0
+    if piece_phase < 0.0:
+        piece_phase = 0.0
+    elif piece_phase > 1.0:
+        piece_phase = 1.0
+    cdef double turn_phase = (board.turn - 20.0) / 40.0
+    if turn_phase < 0.0:
+        turn_phase = 0.0
+    elif turn_phase > 1.0:
+        turn_phase = 1.0
+    cdef double eg_phase = piece_phase if piece_phase > turn_phase else turn_phase
+
+    cdef double eff_best_swarm  = W_BEST_SWARM   + W_LATE_BEST_SWARM  * eg_phase
+    cdef double eff_swarm_count = W_SWARM_COUNT   + W_LATE_SWARM_COUNT * eg_phase
+    cdef double eff_distance    = W_DISTANCE      + W_LATE_DISTANCE    * eg_phase
+    cdef double eff_links       = W_LINKS         + W_LATE_LINKS       * eg_phase
+    cdef double eff_spread      = W_SPREAD        + W_LATE_SPREAD      * eg_phase
+
+    cdef double value = 0.0
+    value += (our_data.best_value - opp_data.best_value) * eff_best_swarm
+    value -= (our_data.num_swarms - 1) * eff_swarm_count
+    value += (opp_data.num_swarms - 1) * eff_swarm_count
     value += (our_material - opp_material) * W_MATERIAL
     value -= our_isolated * W_ISOLATED
     value += opp_isolated * W_ISOLATED
-    value -= our_dist * W_DISTANCE
-    value += opp_dist * W_DISTANCE
+    value -= our_dist * eff_distance
+    value += opp_dist * eff_distance
+    value += (our_links - opp_links) * eff_links
+    value -= our_data.spread * eff_spread
+    value += opp_data.spread * eff_spread
+
+    if our_piece_count <= 8 and our_data.num_swarms == 2:
+        if c_has_one_move_connect(board, our_team, our_piece_count):
+            value += CONNECT_BONUS
+    if opp_piece_count <= 8 and opp_data.num_swarms == 2:
+        if c_has_one_move_connect(board, opp_team, opp_piece_count):
+            value -= CONNECT_BONUS
 
     return value
 

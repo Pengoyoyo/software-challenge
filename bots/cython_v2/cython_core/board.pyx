@@ -10,7 +10,6 @@ DEF TEAM_SQUID = 3
 DEF FIELD_EMPTY = 0
 DEF FIELD_TYPE_SQUID = 6
 
-# Richtungsvektoren: Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft
 cdef int[8][2] DIRECTION_VECTORS = [
     [0, 1],
     [1, 1],

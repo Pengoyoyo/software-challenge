@@ -1,0 +1,266 @@
+{
+  "run_id": "2026-03-12T18_25_49_00_00_duel",
+  "run_dir": "results/runs/2026-03-12T18_25_49_00_00_duel",
+  "mode": "duel",
+  "started_at": "2026-03-12T18:25:49+00:00",
+  "completed_at": "2026-03-12T18:28:51+00:00",
+  "completed": true,
+  "games_per_pair": 20,
+  "timeout_sec": 300,
+  "parallel_workers": 10,
+  "total_games": 20,
+  "bots": [
+    {
+      "name": "client_cython [bots/cython_v3]",
+      "path": "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/bots/cython_v3/client_cython.py",
+      "wins": 7,
+      "losses": 3,
+      "draws": 10,
+      "errors": 0,
+      "games": 20,
+      "score": 0.6,
+      "winrate": "35.0%",
+      "elo": 1033.08
+    },
+    {
+      "name": "client_cython [bots/cython_v2]",
+      "path": "/home/rasmus/OC/Personal/linux/Documents/Software-Challenge/bots/cython_v2/client_cython.py",
+      "wins": 3,
+      "losses": 7,
+      "draws": 10,
+      "errors": 0,
+      "games": 20,
+      "score": 0.4,
+      "winrate": "15.0%",
+      "elo": 966.92
+    }
+  ],
+  "records_summary": {
+    "bot_one_wins": 5,
+    "bot_two_wins": 5,
+    "draws": 10,
+    "errors": 0
+  },
+  "game_records": [
+    {
+      "game_idx": 0,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 88.52131342800021,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00000_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00000_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00000_bot_two.log"
+    },
+    {
+      "game_idx": 1,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 91.52117213799966,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00001_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00001_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00001_bot_two.log"
+    },
+    {
+      "game_idx": 2,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 89.11807127100019,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00002_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00002_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00002_bot_two.log"
+    },
+    {
+      "game_idx": 3,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 90.02209004399992,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00003_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00003_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00003_bot_two.log"
+    },
+    {
+      "game_idx": 4,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 6.266272805999961,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00004_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00004_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00004_bot_two.log"
+    },
+    {
+      "game_idx": 5,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 89.11405675600008,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00005_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00005_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00005_bot_two.log"
+    },
+    {
+      "game_idx": 6,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 89.71814376900011,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00006_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00006_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00006_bot_two.log"
+    },
+    {
+      "game_idx": 7,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 89.13415621400009,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00007_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00007_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00007_bot_two.log"
+    },
+    {
+      "game_idx": 8,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 89.11455296599979,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00008_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00008_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00008_bot_two.log"
+    },
+    {
+      "game_idx": 9,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 87.45597260700015,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00009_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00009_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00009_bot_two.log"
+    },
+    {
+      "game_idx": 10,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 88.25887441099985,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00010_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00010_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00010_bot_two.log"
+    },
+    {
+      "game_idx": 11,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 90.03565852600013,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00011_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00011_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00011_bot_two.log"
+    },
+    {
+      "game_idx": 12,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 89.34969845900014,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00012_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00012_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00012_bot_two.log"
+    },
+    {
+      "game_idx": 13,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 87.63598415100023,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00013_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00013_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00013_bot_two.log"
+    },
+    {
+      "game_idx": 14,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 83.73539619999974,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00014_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00014_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00014_bot_two.log"
+    },
+    {
+      "game_idx": 15,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 89.67699503300037,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00015_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00015_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00015_bot_two.log"
+    },
+    {
+      "game_idx": 16,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 88.08909696899991,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00016_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00016_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00016_bot_two.log"
+    },
+    {
+      "game_idx": 17,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 90.18947167100032,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00017_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00017_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00017_bot_two.log"
+    },
+    {
+      "game_idx": 18,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "client_cython [bots/cython_v3]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 87.2184563349997,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00018_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00018_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00018_bot_two.log"
+    },
+    {
+      "game_idx": 19,
+      "bot_one": "client_cython [bots/cython_v3]",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 89.73936993500001,
+      "server_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00019_server.log",
+      "bot_one_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00019_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-03-12T18_25_49_00_00_duel/logs/game_00019_bot_two.log"
+    }
+  ]
+}

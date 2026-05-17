@@ -4,11 +4,10 @@ cimport cython
 
 from .board cimport CBoard, get_team, get_value, uint64, int8
 
-cdef uint64[10][10][4][5] ZOBRIST_PIECE  # [x][y][team][value]
+cdef uint64[10][10][4][5] ZOBRIST_PIECE
 cdef uint64[61] ZOBRIST_TURN
 cdef bint _initialized = False
 
-# xorshift64 state
 cdef uint64 _xorshift_state = 0x123456789ABCDEF0ULL
 
 
@@ -70,26 +69,21 @@ cdef uint64 c_update_hash_move(
     cdef uint64 h = old_hash
     cdef int cap_team, cap_value
 
-    # Update turn
     h ^= ZOBRIST_TURN[old_turn]
     h ^= ZOBRIST_TURN[new_turn]
 
-    # Remove piece from start
     h ^= ZOBRIST_PIECE[start_x][start_y][team][value]
 
-    # Remove captured piece from target (BUG FIX: was missing before)
     cap_team = get_team(captured_field)
     if cap_team != 0:
         cap_value = get_value(captured_field)
         h ^= ZOBRIST_PIECE[target_x][target_y][cap_team][cap_value]
 
-    # Place piece at target
     h ^= ZOBRIST_PIECE[target_x][target_y][team][value]
 
     return h
 
 
-# Keep Python-accessible wrappers for backward compatibility
 cpdef uint64 compute_hash(CBoard board):
     return c_compute_hash(board)
 
@@ -102,7 +96,6 @@ cpdef uint64 update_hash_move(
     int target_x, int target_y,
     int team, int value
 ):
-    # Legacy wrapper without capture - pass FIELD_EMPTY
     return c_update_hash_move(old_hash, old_turn, new_turn,
                                start_x, start_y, target_x, target_y,
                                team, value, 0)

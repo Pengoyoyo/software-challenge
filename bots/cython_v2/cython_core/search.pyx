@@ -27,7 +27,7 @@ DEF MAX_DEPTH = 40
 DEF HISTORY_CAP = 1000000
 DEF NULL_MOVE_R = 2
 DEF ENABLE_NULL_MOVE = 1
-DEF TIME_USAGE_FRACTION = 0.80
+DEF TIME_USAGE_FRACTION = 0.88
 DEF QSEARCH_MAX_DEPTH = 10
 DEF COUNTER_TABLE_SIZE = 800
 
@@ -42,7 +42,6 @@ cdef struct TTEntry:
 
 cdef TTEntry* tt = NULL
 
-# Search state as module-level C variables for zero-overhead access
 cdef int g_our_team
 cdef int g_opp_team
 cdef double g_start_time
@@ -53,15 +52,12 @@ cdef int g_max_depth_reached
 cdef bint g_timeout_flag
 cdef unsigned char g_tt_generation = 1
 
-# Killer moves: store actual CMove coordinates, not indices
 cdef CMove g_killer_moves[MAX_DEPTH][2]
 cdef bint g_killer_valid[MAX_DEPTH][2]
 
-# History heuristic table
 cdef int g_history[800]
 cdef bint g_history_initialized = False
 
-# Counter-move table (indexed by previous move key)
 cdef CMove g_counter_moves[COUNTER_TABLE_SIZE]
 cdef bint g_counter_valid[COUNTER_TABLE_SIZE]
 
@@ -184,37 +180,30 @@ cdef inline void age_history() noexcept nogil:
         g_history[i] >>= 1
 
 
-# Move scoring for ordering
 cdef inline int score_move(CMove* move, int depth, CMove* tt_move, bint has_tt,
                             CBoard board, int prev_move_key) noexcept:
     cdef int score = 0
 
-    # TT move gets highest priority
     if has_tt and cmove_equals(move, tt_move):
         return 1000000
 
-    # Killer moves
     if 0 <= depth < MAX_DEPTH:
         if g_killer_valid[depth][0] and cmove_equals(move, &g_killer_moves[depth][0]):
             score += 50000
         elif g_killer_valid[depth][1] and cmove_equals(move, &g_killer_moves[depth][1]):
             score += 40000
 
-    # Counter move (response to the previous move at parent ply)
     if 0 <= prev_move_key < COUNTER_TABLE_SIZE and g_counter_valid[prev_move_key]:
         if cmove_equals(move, &g_counter_moves[prev_move_key]):
             score += 45000
 
-    # MVV capture bonus: prioritize capturing high-value pieces
     cdef int8 target_field = board.get_field(move.target_x, move.target_y)
     cdef int target_team = get_team(target_field)
     if target_team != TEAM_NONE:
         score += 100000 + get_value(target_field) * 1000
 
-    # History heuristic
     score += get_history(move)
 
-    # Center proximity
     cdef int cx = move.target_x - 5
     cdef int cy = move.target_y - 5
     if cx < 0:
@@ -226,7 +215,6 @@ cdef inline int score_move(CMove* move, int depth, CMove* tt_move, bint has_tt,
     return score
 
 
-# Selection sort: pick best move and swap to position i
 cdef inline void order_moves_selection(CMoveList* moves, int* scores, int from_idx) noexcept nogil:
     cdef int best_idx = from_idx
     cdef int best_score = scores[from_idx]
@@ -407,7 +395,6 @@ cdef double negamax(
 ):
     global g_timeout_flag, g_nodes_searched, g_tt_hits, g_max_depth_reached
 
-    # All cdef declarations at top of function
     cdef double alpha_orig = alpha
     cdef int tt_base = <int>(state_hash & TT_CLUSTER_MASK) * TT_CLUSTER_SIZE
     cdef int tt_slot
@@ -448,7 +435,6 @@ cdef double negamax(
     if ply > g_max_depth_reached:
         g_max_depth_reached = ply
 
-    # TT probe (4-way clustered buckets to reduce collision loss)
     for tt_slot in range(TT_CLUSTER_SIZE):
         entry = &tt[tt_base + tt_slot]
         if not entry.has_move or entry.hash_key != state_hash:
@@ -475,7 +461,6 @@ cdef double negamax(
         if alpha >= beta:
             return entry.score
 
-    # Determine current team and perspective
     current_team = TEAM_ONE if (board.turn % 2 == 0) else TEAM_TWO
     opp_team = TEAM_TWO if current_team == TEAM_ONE else TEAM_ONE
     color = 1 if current_team == g_our_team else -1
@@ -504,16 +489,19 @@ cdef double negamax(
     if depth == 0:
         return quiescence(board, alpha, beta, ply, 0)
 
-    static_eval = color * c_evaluate(board, g_our_team)
-    if not is_pv and depth <= 3 and static_eval - 120.0 * depth >= beta:
-        return static_eval
+    static_eval = 0.0
+    if not is_pv and depth <= 3:
+        static_eval = color * c_evaluate(board, g_our_team)
+        if static_eval - 360.0 * depth >= beta:
+            return static_eval
 
     c_generate_moves(board, current_team, &moves)
 
     if moves.count == 0:
+        if static_eval == 0.0:
+            static_eval = color * c_evaluate(board, g_our_team)
         return static_eval
 
-    # Null-move pruning
     if ENABLE_NULL_MOVE and allow_null and not is_pv and depth >= 4 and board.turn < 56 and own_count > 4 and opp_count > 4:
         board.turn += 1
         null_hash = state_hash ^ 0xDEADBEEFCAFEBABEULL
@@ -528,7 +516,6 @@ cdef double negamax(
         if null_score >= beta:
             return null_score
 
-    # Score moves for ordering
     for i in range(moves.count):
         scores[i] = score_move(&moves.moves[i], depth, &tt_move, has_tt_move, board, prev_move_key)
 
@@ -539,35 +526,30 @@ cdef double negamax(
         if g_timeout_flag:
             return 0.0
 
-        # Incremental selection sort - pick best remaining move
         order_moves_selection(&moves, scores, i)
 
         m = &moves.moves[i]
         mkey = move_key(m)
 
-        # Get piece info before applying move
         team = get_team(board.get_field(m.start_x, m.start_y))
         value = get_value(board.get_field(m.start_x, m.start_y))
         target_field_before = board.get_field(m.target_x, m.target_y)
         quiet = get_team(target_field_before) == TEAM_NONE
 
         if not is_pv and quiet:
-            if depth <= 2 and i >= 3 and static_eval + 130.0 * depth <= alpha:
+            if depth <= 2 and i >= 3 and static_eval + 390.0 * depth <= alpha:
                 continue
             if depth <= 2 and i >= 8 + 4 * depth:
                 break
 
-        # Apply move in-place
         captured = c_apply_move_inplace(board, m)
 
-        # Incremental hash update with capture fix
         new_hash = c_update_hash_move(
             state_hash, board.turn - 1, board.turn,
             m.start_x, m.start_y, m.target_x, m.target_y,
             team, value, target_field_before
         )
 
-        # LMR
         reduction = compute_lmr_reduction(depth, i)
 
         if reduction > 0 and not is_pv:
@@ -580,14 +562,12 @@ cdef double negamax(
             score = -negamax(board, new_hash, depth - 1,
                              -beta, -alpha, i == 0 and is_pv, True, ply + 1, mkey)
         else:
-            # PVS: zero-window search first
             score = -negamax(board, new_hash, depth - 1,
                              -alpha - 1, -alpha, False, True, ply + 1, mkey)
             if not g_timeout_flag and score > alpha and score < beta:
                 score = -negamax(board, new_hash, depth - 1,
                                  -beta, -alpha, True, True, ply + 1, mkey)
 
-        # Undo move
         c_undo_move(board, m, captured)
 
         if g_timeout_flag:
@@ -608,7 +588,6 @@ cdef double negamax(
             update_killer(m, depth)
             break
 
-    # Store in TT
     if best_score <= alpha_orig:
         flag = TT_UPPER
     elif best_score >= beta:
@@ -616,7 +595,6 @@ cdef double negamax(
     else:
         flag = TT_EXACT
 
-    # Prefer updating same key if depth improves (or exact score is available).
     for tt_slot in range(TT_CLUSTER_SIZE):
         entry = &tt[tt_base + tt_slot]
         if entry.has_move and entry.hash_key == state_hash:
@@ -630,7 +608,6 @@ cdef double negamax(
                 entry.has_move = True
             return best_score
 
-    # No matching key found: choose empty slot, else weakest depth/age score.
     replace_idx = -1
     replace_quality = 1_000_000
     for tt_slot in range(TT_CLUSTER_SIZE):
@@ -702,9 +679,8 @@ cpdef object iterative_deepening(object game_state, int our_team, double time_li
     while depth <= 30:
         g_timeout_flag = False
 
-        # Aspiration windows
         if depth >= 4 and best_score > -WIN_SCORE + 100 and best_score < WIN_SCORE - 100:
-            asp_delta = 25.0
+            asp_delta = 100.0
             asp_alpha = best_score - asp_delta
             asp_beta = best_score + asp_delta
 
@@ -734,7 +710,6 @@ cpdef object iterative_deepening(object game_state, int our_team, double time_li
         if g_timeout_flag:
             break
 
-        # Retrieve best move from TT
         tt_base = <int>(state_hash & TT_CLUSTER_MASK) * TT_CLUSTER_SIZE
         best_tt_depth = -1
         for tt_slot in range(TT_CLUSTER_SIZE):
@@ -753,7 +728,6 @@ cpdef object iterative_deepening(object game_state, int our_team, double time_li
         if score > WIN_SCORE - 100 or score < -WIN_SCORE + 100:
             break
 
-        # Age history between depths
         age_history()
 
         depth += 1

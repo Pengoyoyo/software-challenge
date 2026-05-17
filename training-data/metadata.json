@@ -1,0 +1,24 @@
+{
+  "total_games": 10308,
+  "processed_games": 0,
+  "skipped_no_result": 10308,
+  "total_samples": 0,
+  "chunks": 0,
+  "chunk_size": 5000,
+  "tensor_shape": [
+    8,
+    10,
+    10
+  ],
+  "channels": [
+    "own_small",
+    "own_medium",
+    "own_large",
+    "opp_small",
+    "opp_medium",
+    "opp_large",
+    "squid",
+    "turn_progress"
+  ],
+  "labels": "1.0=win, 0.5=draw, 0.0=loss (from player-to-move perspective)"
+}

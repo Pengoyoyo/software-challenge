@@ -90,6 +90,24 @@ def extract_board_states(text: str) -> list:
     return sorted(states.items())
 
 
+def diagnose_log(server_log_path: Path) -> dict:
+    """
+    Quick diagnostic of a single server log without full parsing.
+    Returns a dict with keys: has_result, has_gamestate, has_start, size_bytes, line_count.
+    """
+    try:
+        text = server_log_path.read_text(encoding='utf-8', errors='replace')
+        return {
+            'has_result':    bool(RE_RESULT.search(text)),
+            'has_gamestate': 'GameState(turn=' in text,
+            'has_start':     'Starting Game' in text or 'start' in text.lower(),
+            'size_bytes':    server_log_path.stat().st_size,
+            'line_count':    text.count('\n'),
+        }
+    except Exception as e:
+        return {'error': str(e)}
+
+
 def encode_game(server_log_path: Path):
     """
     Parse one server log file and return a list of sample dicts, or None on failure.
@@ -175,6 +193,9 @@ def main():
                         help='Parallel workers (default: all CPUs)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Process only 10 games and print summary')
+    parser.add_argument('--diagnose', action='store_true',
+                        help='Sample up to 20 logs and report why games are skipped, then exit. '
+                             'Use this when you get 0 processed games to understand the cause.')
     args = parser.parse_args()
 
     # Discover log files
@@ -183,19 +204,51 @@ def main():
         print(f"No server log files found in {args.input_dir}", file=sys.stderr)
         sys.exit(1)
 
+    total_games = len(game_files)
+    print(f"Found {total_games} games in {args.input_dir}")
+
+    # --diagnose: quick scan to explain why games might be skipped
+    if args.diagnose:
+        import random as _random
+        sample = _random.sample(game_files, min(20, len(game_files)))
+        diags = [diagnose_log(p) for p in sample]
+        n_result    = sum(1 for d in diags if d.get('has_result'))
+        n_gamestate = sum(1 for d in diags if d.get('has_gamestate'))
+        n_start     = sum(1 for d in diags if d.get('has_start'))
+        sizes       = [d['size_bytes'] for d in diags if 'size_bytes' in d]
+        print(f"\n=== Diagnose ({len(sample)} Stichproben) ===")
+        print(f"  Mit GameResult  : {n_result}/{len(sample)}")
+        print(f"  Mit GameState   : {n_gamestate}/{len(sample)}")
+        print(f"  Mit game start  : {n_start}/{len(sample)}")
+        if sizes:
+            print(f"  Dateigröße      : min={min(sizes):,}B  max={max(sizes):,}B  avg={sum(sizes)//len(sizes):,}B")
+        if n_result == 0:
+            print()
+            print("DIAGNOSE: Kein einziges Log enthält ein GameResult.")
+            print("  → tune_rust_v2.py hat alle erfolgreich abgeschlossenen Spiele gelöscht.")
+            print("  → Nur Fehler-/Timeout-Logs wurden behalten (Standard ohne --keep-game-logs).")
+            print()
+            print("LÖSUNG: Nächsten Lauf mit --keep-game-logs starten:")
+            print("  python scripts/tune_rust_v2.py --keep-game-logs ...")
+            print("  ODER separaten Self-Play-Lauf für Trainingsdaten starten.")
+        elif n_result < len(sample) // 2:
+            print(f"\nWARNUNG: Nur {n_result}/{len(sample)} Logs haben ein Ergebnis.")
+            print("  Viele Spiele laufen auf Timeout oder Crash.")
+        sys.exit(0)
+
     if args.dry_run:
         game_files = game_files[:10]
         print(f"Dry run: processing {len(game_files)} games")
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    total_games = len(game_files)
-    print(f"Found {total_games} games, using {args.workers} workers")
+    print(f"Using {args.workers} workers")
 
     # Processing loop
     boards_buf, labels_buf, turns_buf = [], [], []
     chunk_idx = 0
     stats = {'processed': 0, 'skipped_no_result': 0, 'failed': 0, 'total_samples': 0}
+    labels_all = []
 
     iter_fn = tqdm(total=total_games, unit='games') if HAS_TQDM else None
 
@@ -215,6 +268,7 @@ def main():
                 boards_buf.append(s['board'])
                 labels_buf.append(s['label'])
                 turns_buf.append(s['turn'])
+                labels_all.append(s['label'])
 
             if len(boards_buf) >= args.chunk_size:
                 path = save_chunk(args.output_dir, chunk_idx, boards_buf, labels_buf, turns_buf)
@@ -256,17 +310,29 @@ def main():
     print(f"\nDone.")
     print(f"  Games processed : {stats['processed']}/{total_games}")
     print(f"  Skipped (no result): {stats['skipped_no_result']}")
+    if stats['failed']:
+        print(f"  Failed (exception): {stats['failed']}")
     print(f"  Total samples   : {stats['total_samples']}")
     print(f"  Chunks saved    : {chunk_idx}")
     print(f"  Metadata        : {meta_path}")
 
-    if args.dry_run and boards_buf == [] and chunk_idx == 0:
+    if labels_all:
+        wins   = sum(1 for l in labels_all if l == 1.0)
+        draws  = sum(1 for l in labels_all if l == 0.5)
+        losses = sum(1 for l in labels_all if l == 0.0)
+        n = len(labels_all)
+        print(f"  Label distribution: wins={wins} ({wins/n:.1%})  draws={draws} ({draws/n:.1%})  losses={losses} ({losses/n:.1%})")
+
+    if stats['processed'] == 0 and stats['skipped_no_result'] > 0:
+        print()
+        print("WARNING: 0 games produced training data.")
+        print("  All logs lack a GameResult — these are likely error/timeout logs kept by")
+        print("  tune_rust_v2.py when --keep-game-logs was NOT set.")
+        print("  Run with --diagnose for details, or re-run the tuner with --keep-game-logs.")
+
+    if args.dry_run and chunk_idx == 0:
         print("\nDry run: no chunks written (fewer than chunk-size samples).")
         print("Sample count:", stats['total_samples'])
-        print("Label distribution:",
-              f"wins={sum(1 for l in labels_buf if l == 1.0)}, "
-              f"draws={sum(1 for l in labels_buf if l == 0.5)}, "
-              f"losses={sum(1 for l in labels_buf if l == 0.0)}")
 
 
 if __name__ == '__main__':

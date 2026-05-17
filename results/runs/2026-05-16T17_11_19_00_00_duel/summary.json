@@ -1,0 +1,156 @@
+{
+  "run_id": "2026-05-16T17_11_19_00_00_duel",
+  "run_dir": "results/runs/2026-05-16T17_11_19_00_00_duel",
+  "mode": "duel",
+  "started_at": "2026-05-16T17:11:19+00:00",
+  "completed_at": "2026-05-16T17:13:50+00:00",
+  "completed": true,
+  "games_per_pair": 10,
+  "timeout_sec": 300,
+  "parallel_workers": 5,
+  "total_games": 10,
+  "bots": [
+    {
+      "name": "pur_rust_client",
+      "path": "/home/rasmus/sync/Documents/Software-Challenge/bots/rust_v2/pur_rust_client.py",
+      "wins": 5,
+      "losses": 4,
+      "draws": 1,
+      "errors": 0,
+      "games": 10,
+      "score": 0.55,
+      "winrate": "50.0%",
+      "elo": 1002.41
+    },
+    {
+      "name": "pur_rust_client [bots/rust_v3]",
+      "path": "/home/rasmus/sync/Documents/Software-Challenge/bots/rust_v3/pur_rust_client.py",
+      "wins": 4,
+      "losses": 5,
+      "draws": 1,
+      "errors": 0,
+      "games": 10,
+      "score": 0.45,
+      "winrate": "40.0%",
+      "elo": 997.59
+    }
+  ],
+  "records_summary": {
+    "bot_one_wins": 4,
+    "bot_two_wins": 5,
+    "draws": 1,
+    "errors": 0
+  },
+  "game_records": [
+    {
+      "game_idx": 0,
+      "bot_one": "pur_rust_client",
+      "bot_two": "pur_rust_client [bots/rust_v3]",
+      "result": 0,
+      "reason": "bots_exit_zero_assume_draw",
+      "duration_sec": 74.4827687449997,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00000_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00000_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00000_bot_two.log"
+    },
+    {
+      "game_idx": 1,
+      "bot_one": "pur_rust_client [bots/rust_v3]",
+      "bot_two": "pur_rust_client",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 72.44286684800136,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00001_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00001_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00001_bot_two.log"
+    },
+    {
+      "game_idx": 2,
+      "bot_one": "pur_rust_client",
+      "bot_two": "pur_rust_client [bots/rust_v3]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 68.09117700000024,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00002_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00002_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00002_bot_two.log"
+    },
+    {
+      "game_idx": 3,
+      "bot_one": "pur_rust_client [bots/rust_v3]",
+      "bot_two": "pur_rust_client",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 70.03969667900128,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00003_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00003_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00003_bot_two.log"
+    },
+    {
+      "game_idx": 4,
+      "bot_one": "pur_rust_client",
+      "bot_two": "pur_rust_client [bots/rust_v3]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 76.18580772099995,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00004_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00004_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00004_bot_two.log"
+    },
+    {
+      "game_idx": 5,
+      "bot_one": "pur_rust_client [bots/rust_v3]",
+      "bot_two": "pur_rust_client",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 72.59389725100118,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00005_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00005_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00005_bot_two.log"
+    },
+    {
+      "game_idx": 6,
+      "bot_one": "pur_rust_client",
+      "bot_two": "pur_rust_client [bots/rust_v3]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 71.54387530699933,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00006_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00006_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00006_bot_two.log"
+    },
+    {
+      "game_idx": 7,
+      "bot_one": "pur_rust_client [bots/rust_v3]",
+      "bot_two": "pur_rust_client",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 74.09191700599877,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00007_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00007_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00007_bot_two.log"
+    },
+    {
+      "game_idx": 8,
+      "bot_one": "pur_rust_client",
+      "bot_two": "pur_rust_client [bots/rust_v3]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 72.43856475299981,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00008_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00008_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00008_bot_two.log"
+    },
+    {
+      "game_idx": 9,
+      "bot_one": "pur_rust_client [bots/rust_v3]",
+      "bot_two": "pur_rust_client",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 71.54304053500164,
+      "server_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00009_server.log",
+      "bot_one_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00009_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-16T17_11_19_00_00_duel/logs/game_00009_bot_two.log"
+    }
+  ]
+}
