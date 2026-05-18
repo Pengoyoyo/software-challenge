@@ -172,6 +172,7 @@ pub struct SearchEngine {
     history: [[i16; 100]; 100], // i16 for smaller cache footprint
     killers: [[u16; 2]; MAX_PLY],
     tt_hits: u64,
+    pub use_nnue: bool,
 }
 
 impl SearchEngine {
@@ -181,6 +182,7 @@ impl SearchEngine {
             history: [[0; 100]; 100],
             killers: [[0; 2]; MAX_PLY],
             tt_hits: 0,
+            use_nnue: cfg!(has_nnue),
         }
     }
 
@@ -505,8 +507,8 @@ impl SearchEngine {
         excluded_move: u16, // singular search: skip this move (0 = none)
     ) -> i32 {
         timer.tick();
-        if timer.timed_out() { return evaluate(pos, pos.player, depth); }
-        if ply >= MAX_PLY - 1 { return evaluate(pos, pos.player, depth); }
+        if timer.timed_out() { return evaluate(pos, pos.player, depth, self.use_nnue); }
+        if ply >= MAX_PLY - 1 { return evaluate(pos, pos.player, depth, self.use_nnue); }
 
         let player = pos.player;
         let opp = opponent(player);
@@ -532,7 +534,7 @@ impl SearchEngine {
         let tt_move = if tt_move_raw != 0 { tt_move_raw } else { self.tt.best_move(key) };
 
         // ── Static eval ───────────────────────────────────────────────────────
-        let static_eval = evaluate(pos, player, depth);
+        let static_eval = evaluate(pos, player, depth, self.use_nnue);
 
         // ── Reverse Futility Pruning ──────────────────────────────────────────
         if !PV && excluded_move == 0 && depth <= RFP_DEPTH && static_eval - RFP_MARGIN * depth >= beta {
@@ -738,7 +740,7 @@ impl SearchEngine {
         mut alpha: i32, beta: i32, ply: usize, qdepth: i32) -> i32
     {
         timer.tick();
-        if timer.timed_out() { return evaluate(pos, pos.player, 0); }
+        if timer.timed_out() { return evaluate(pos, pos.player, 0, self.use_nnue); }
 
         let player = pos.player;
         let opp = opponent(player);
@@ -746,7 +748,7 @@ impl SearchEngine {
         if pos.turn >= 60 { return terminal_swarm_score(pos, player, ply as i32); }
         if pos.is_connected(opp) { return -MATE_SCORE + ply as i32; }
 
-        let stand_pat = evaluate(pos, player, 0);
+        let stand_pat = evaluate(pos, player, 0, self.use_nnue);
         if stand_pat >= beta { return stand_pat; }
         if stand_pat > alpha { alpha = stand_pat; }
         if qdepth >= QSEARCH_CAP { return stand_pat; }

@@ -139,12 +139,14 @@ fn main() -> Result<(), ComError> {
     let mut port = 13050u16;
     let mut reservation: Option<String> = None;
 
+    let mut no_nnue = false;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
             "-h" | "--host" => { i += 1; if let Some(v) = args.get(i) { host = v.clone(); } }
             "-p" | "--port" => { i += 1; if let Some(v) = args.get(i) { if let Ok(n) = v.parse::<u16>() { port = n; } } }
             "-r" | "--reservation" => { i += 1; if let Some(v) = args.get(i) { reservation = Some(v.clone()); } }
+            "--no-nnue" => { no_nnue = true; }
             _ => {}
         }
         i += 1;
@@ -159,6 +161,10 @@ fn main() -> Result<(), ComError> {
     info(&format!("Connecting to {}", addr));
 
     let mut logic = Logic::new();
+    if no_nnue {
+        logic.engine.use_nnue = false;
+        info("NNUE disabled — using hand-crafted evaluation");
+    }
 
     let mut com = ComHandler::join(&addr, reservation.as_deref())?;
 

@@ -11,7 +11,7 @@ struct GameResult {
     blue_time_ms: f64,
 }
 
-fn play_one_game(red_time_ms: u64, blue_time_ms: u64, verbose: bool) -> GameResult {
+fn play_one_game(red_time_ms: u64, blue_time_ms: u64, red_nnue: bool, blue_nnue: bool, verbose: bool) -> GameResult {
     let mut pos = Position::default();
 
     // Simple starting position: 4x1 and 4x2 fish spread on the board
@@ -26,7 +26,9 @@ fn play_one_game(red_time_ms: u64, blue_time_ms: u64, verbose: bool) -> GameResu
     pos.recompute_caches();
 
     let mut red_engine = SearchEngine::new();
+    red_engine.use_nnue = red_nnue;
     let mut blue_engine = SearchEngine::new();
+    blue_engine.use_nnue = blue_nnue;
 
     let mut red_total_time = 0.0f64;
     let mut blue_total_time = 0.0f64;
@@ -116,8 +118,13 @@ fn main() {
     let blue_time = args.get(3).and_then(|s| s.parse::<u64>().ok()).unwrap_or(1000);
     let verbose = args.iter().any(|s| s == "-v");
 
-    println!("=== Self-Play: {} games ===", n_games);
-    println!("Red time: {}ms, Blue time: {}ms", red_time, blue_time);
+    // Red = NNUE, Blue = hand-crafted (default weights)
+    let red_nnue = cfg!(has_nnue);
+    let blue_nnue = false;
+
+    println!("=== NNUE vs Default: {} games ===", n_games);
+    println!("Red  (NNUE={}): {}ms per move", red_nnue, red_time);
+    println!("Blue (NNUE={}): {}ms per move", blue_nnue, blue_time);
     println!();
 
     let mut red_wins = 0usize;
@@ -128,7 +135,7 @@ fn main() {
     let mut total_turns = 0u64;
 
     for i in 0..n_games {
-        let result = play_one_game(red_time, blue_time, verbose);
+        let result = play_one_game(red_time, blue_time, red_nnue, blue_nnue, verbose);
 
         match result.winner {
             Some(ONE) => red_wins += 1,
@@ -141,11 +148,11 @@ fn main() {
         total_turns += result.turns as u64;
 
         println!(
-            "Game {:>3}: Winner={:>4} | Red swarm={:>3} Blue swarm={:>3} | Turns={:>2} | Red={:.0}ms Blue={:.0}ms",
+            "Game {:>3}: Winner={:>10} | Red swarm={:>3} Blue swarm={:>3} | Turns={:>2} | Red={:.0}ms Blue={:.0}ms",
             i + 1,
             match result.winner {
-                Some(ONE) => "RED",
-                Some(TWO) => "BLUE",
+                Some(ONE) => "RED(NNUE)",
+                Some(TWO) => "BLUE(hce)",
                 _ => "DRAW",
             },
             result.red_swarm,
@@ -157,12 +164,12 @@ fn main() {
     }
 
     println!();
-    println!("=== Results ===");
-    println!("Red wins:  {} ({:.1}%)", red_wins, red_wins as f64 * 100.0 / n_games as f64);
-    println!("Blue wins: {} ({:.1}%)", blue_wins, blue_wins as f64 * 100.0 / n_games as f64);
-    println!("Draws:     {} ({:.1}%)", draws, draws as f64 * 100.0 / n_games as f64);
+    println!("=== Results after {} games ===", n_games);
+    println!("Red  (NNUE) wins:  {} ({:.1}%)", red_wins, red_wins as f64 * 100.0 / n_games as f64);
+    println!("Blue (HCE)  wins:  {} ({:.1}%)", blue_wins, blue_wins as f64 * 100.0 / n_games as f64);
+    println!("Draws:             {} ({:.1}%)", draws, draws as f64 * 100.0 / n_games as f64);
     println!(
-        "Avg swarm: Red={:.1} Blue={:.1}",
+        "Avg swarm: Red(NNUE)={:.1} Blue(HCE)={:.1}",
         total_red_swarm as f64 / n_games as f64,
         total_blue_swarm as f64 / n_games as f64
     );

@@ -1,31 +1,31 @@
 {
   "version": 1,
   "mode": "duel",
-  "run_id": "2026-05-16T17_44_27_00_00_duel",
+  "run_id": "2026-05-18T15_16_03_00_00_duel",
   "config": {
     "mode": "duel",
-    "games_per_pair": 500,
+    "games_per_pair": 30,
     "timeout_sec": 300,
     "base_port": 16000,
-    "parallel_workers": 10
+    "parallel_workers": 8
   },
   "bots": [
     {
-      "name": "pur_rust_client",
-      "path": "/home/rasmus/Sync/Documents/Software-Challenge/bots/rust_v3/pur_rust_client.py",
-      "elo": 1000.0,
-      "wins": 0,
-      "losses": 0,
+      "name": "client_cython [bots/cython_v2]",
+      "path": "/home/rasmus/sync/Documents/Software-Challenge/bots/cython_v2/client_cython.py",
+      "elo": 958.9148120887144,
+      "wins": 9,
+      "losses": 21,
       "draws": 0,
       "errors": 0,
-      "timeouts": 0
+      "timeouts": 1
     },
     {
-      "name": "pur_rust_client [bots/rust_v2]",
-      "path": "/home/rasmus/Sync/Documents/Software-Challenge/bots/rust_v2/pur_rust_client.py",
-      "elo": 1000.0,
-      "wins": 0,
-      "losses": 0,
+      "name": "run_nnue",
+      "path": "/home/rasmus/sync/Documents/Software-Challenge/bots/rust_v3/run_nnue.py",
+      "elo": 1041.0851879112859,
+      "wins": 21,
+      "losses": 9,
       "draws": 0,
       "errors": 0,
       "timeouts": 0
@@ -181,2361 +181,342 @@
       "game_idx": 29,
       "bot_one_idx": 1,
       "bot_two_idx": 0
-    },
-    {
-      "game_idx": 30,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 31,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 32,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 33,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 34,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 35,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 36,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 37,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 38,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 39,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 40,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 41,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 42,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 43,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 44,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 45,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 46,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 47,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 48,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 49,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 50,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 51,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 52,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 53,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 54,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 55,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 56,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 57,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 58,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 59,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 60,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 61,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 62,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 63,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 64,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 65,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 66,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 67,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 68,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 69,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 70,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 71,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 72,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 73,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 74,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 75,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 76,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 77,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 78,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 79,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 80,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 81,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 82,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 83,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 84,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 85,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 86,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 87,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 88,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 89,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 90,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 91,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 92,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 93,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 94,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 95,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 96,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 97,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 98,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 99,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 100,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 101,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 102,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 103,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 104,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 105,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 106,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 107,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 108,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 109,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 110,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 111,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 112,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 113,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 114,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 115,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 116,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 117,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 118,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 119,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 120,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 121,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 122,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 123,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 124,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 125,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 126,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 127,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 128,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 129,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 130,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 131,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 132,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 133,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 134,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 135,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 136,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 137,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 138,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 139,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 140,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 141,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 142,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 143,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 144,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 145,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 146,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 147,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 148,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 149,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 150,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 151,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 152,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 153,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 154,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 155,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 156,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 157,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 158,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 159,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 160,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 161,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 162,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 163,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 164,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 165,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 166,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 167,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 168,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 169,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 170,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 171,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 172,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 173,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 174,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 175,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 176,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 177,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 178,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 179,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 180,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 181,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 182,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 183,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 184,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 185,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 186,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 187,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 188,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 189,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 190,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 191,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 192,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 193,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 194,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 195,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 196,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 197,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 198,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 199,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 200,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 201,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 202,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 203,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 204,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 205,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 206,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 207,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 208,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 209,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 210,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 211,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 212,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 213,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 214,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 215,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 216,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 217,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 218,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 219,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 220,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 221,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 222,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 223,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 224,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 225,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 226,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 227,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 228,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 229,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 230,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 231,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 232,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 233,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 234,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 235,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 236,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 237,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 238,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 239,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 240,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 241,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 242,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 243,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 244,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 245,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 246,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 247,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 248,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 249,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 250,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 251,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 252,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 253,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 254,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 255,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 256,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 257,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 258,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 259,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 260,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 261,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 262,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 263,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 264,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 265,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 266,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 267,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 268,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 269,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 270,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 271,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 272,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 273,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 274,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 275,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 276,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 277,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 278,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 279,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 280,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 281,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 282,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 283,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 284,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 285,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 286,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 287,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 288,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 289,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 290,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 291,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 292,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 293,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 294,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 295,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 296,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 297,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 298,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 299,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 300,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 301,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 302,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 303,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 304,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 305,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 306,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 307,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 308,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 309,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 310,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 311,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 312,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 313,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 314,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 315,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 316,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 317,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 318,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 319,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 320,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 321,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 322,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 323,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 324,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 325,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 326,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 327,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 328,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 329,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 330,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 331,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 332,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 333,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 334,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 335,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 336,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 337,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 338,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 339,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 340,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 341,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 342,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 343,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 344,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 345,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 346,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 347,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 348,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 349,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 350,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 351,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 352,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 353,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 354,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 355,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 356,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 357,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 358,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 359,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 360,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 361,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 362,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 363,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 364,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 365,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 366,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 367,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 368,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 369,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 370,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 371,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 372,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 373,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 374,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 375,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 376,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 377,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 378,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 379,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 380,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 381,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 382,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 383,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 384,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 385,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 386,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 387,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 388,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 389,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 390,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 391,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 392,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 393,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 394,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 395,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 396,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 397,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 398,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 399,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 400,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 401,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 402,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 403,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 404,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 405,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 406,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 407,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 408,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 409,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 410,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 411,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 412,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 413,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 414,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 415,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 416,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 417,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 418,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 419,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 420,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 421,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 422,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 423,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 424,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 425,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 426,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 427,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 428,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 429,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 430,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 431,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 432,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 433,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 434,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 435,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 436,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 437,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 438,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 439,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 440,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 441,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 442,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 443,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 444,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 445,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 446,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 447,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 448,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 449,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 450,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 451,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 452,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 453,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 454,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 455,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 456,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 457,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 458,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 459,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 460,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 461,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 462,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 463,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 464,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 465,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 466,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 467,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 468,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 469,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 470,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 471,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 472,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 473,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 474,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 475,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 476,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 477,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 478,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 479,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 480,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 481,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 482,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 483,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 484,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 485,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 486,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 487,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 488,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 489,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 490,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 491,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 492,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 493,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 494,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 495,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 496,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 497,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
-    },
-    {
-      "game_idx": 498,
-      "bot_one_idx": 0,
-      "bot_two_idx": 1
-    },
-    {
-      "game_idx": 499,
-      "bot_one_idx": 1,
-      "bot_two_idx": 0
     }
   ],
-  "next_game_idx": 0,
-  "game_records": [],
-  "started_at": "2026-05-16T17:44:27+00:00",
-  "updated_at": "2026-05-16T17:44:27+00:00",
-  "completed": false
+  "next_game_idx": 30,
+  "game_records": [
+    {
+      "game_idx": 0,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 48.89494950399967,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00000_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00000_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00000_bot_two.log"
+    },
+    {
+      "game_idx": 1,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 72.89045734899992,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00001_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00001_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00001_bot_two.log"
+    },
+    {
+      "game_idx": 2,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 38.830291835000025,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00002_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00002_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00002_bot_two.log"
+    },
+    {
+      "game_idx": 3,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 67.50414857099986,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00003_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00003_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00003_bot_two.log"
+    },
+    {
+      "game_idx": 4,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 74.0942453079997,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00004_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00004_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00004_bot_two.log"
+    },
+    {
+      "game_idx": 5,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 87.74079580500074,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00005_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00005_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00005_bot_two.log"
+    },
+    {
+      "game_idx": 6,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 75.8983439349995,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00006_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00006_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00006_bot_two.log"
+    },
+    {
+      "game_idx": 7,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 78.8908936530006,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00007_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00007_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00007_bot_two.log"
+    },
+    {
+      "game_idx": 8,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 55.62816921100057,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00008_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00008_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00008_bot_two.log"
+    },
+    {
+      "game_idx": 9,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 45.5856203580006,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00009_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00009_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00009_bot_two.log"
+    },
+    {
+      "game_idx": 10,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 54.587998447000246,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00010_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00010_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00010_bot_two.log"
+    },
+    {
+      "game_idx": 11,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 60.28487913999925,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00011_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00011_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00011_bot_two.log"
+    },
+    {
+      "game_idx": 12,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 51.73481700299999,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00012_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00012_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00012_bot_two.log"
+    },
+    {
+      "game_idx": 13,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 57.734910279999895,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00013_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00013_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00013_bot_two.log"
+    },
+    {
+      "game_idx": 14,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 52.48552747099984,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00014_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00014_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00014_bot_two.log"
+    },
+    {
+      "game_idx": 15,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 44.37893499199981,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00015_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00015_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00015_bot_two.log"
+    },
+    {
+      "game_idx": 16,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 78.90532621700004,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00016_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00016_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00016_bot_two.log"
+    },
+    {
+      "game_idx": 17,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 77.85128219799935,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00017_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00017_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00017_bot_two.log"
+    },
+    {
+      "game_idx": 18,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 66.60095864800041,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00018_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00018_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00018_bot_two.log"
+    },
+    {
+      "game_idx": 19,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 54.74423395000031,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00019_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00019_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00019_bot_two.log"
+    },
+    {
+      "game_idx": 20,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 79.20203842999945,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00020_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00020_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00020_bot_two.log"
+    },
+    {
+      "game_idx": 21,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 51.892542980000144,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00021_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00021_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00021_bot_two.log"
+    },
+    {
+      "game_idx": 22,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 84.90101362299993,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00022_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00022_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00022_bot_two.log"
+    },
+    {
+      "game_idx": 23,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 28.0278193310005,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00023_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00023_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00023_bot_two.log"
+    },
+    {
+      "game_idx": 24,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 79.9383562539997,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00024_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00024_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00024_bot_two.log"
+    },
+    {
+      "game_idx": 25,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 71.83754643100019,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00025_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00025_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00025_bot_two.log"
+    },
+    {
+      "game_idx": 26,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 48.58385434899992,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00026_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00026_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00026_bot_two.log"
+    },
+    {
+      "game_idx": 27,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 59.532512824999685,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00027_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00027_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00027_bot_two.log"
+    },
+    {
+      "game_idx": 28,
+      "bot_one": "client_cython [bots/cython_v2]",
+      "bot_two": "run_nnue",
+      "result": 2,
+      "reason": "winner=TWO",
+      "duration_sec": 84.28948272199978,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00028_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00028_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00028_bot_two.log"
+    },
+    {
+      "game_idx": 29,
+      "bot_one": "run_nnue",
+      "bot_two": "client_cython [bots/cython_v2]",
+      "result": 1,
+      "reason": "winner=ONE",
+      "duration_sec": 88.93668901599995,
+      "server_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00029_server.log",
+      "bot_one_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00029_bot_one.log",
+      "bot_two_log_path": "results/runs/2026-05-18T15_16_03_00_00_duel/logs/game_00029_bot_two.log"
+    }
+  ],
+  "started_at": "2026-05-18T15:16:03+00:00",
+  "updated_at": "2026-05-18T15:21:26+00:00",
+  "completed": true
 }
