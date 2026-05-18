@@ -1,18 +1,20 @@
 """Binary dataset loader with player-relative feature encoding.
 
-File format: 107 bytes/sample
+File format: 108 bytes/sample
   board[100]: u8  piece at each square (0-7)
   player[1]:  u8  1=ONE, 2=TWO
   turn[2]:    u16 LE
   score[4]:   i32 LE  raw AB score from mover's POV
+  outcome[1]: i8  +1=mover wins, 0=draw, -1=mover loses
 """
 
 import struct
 import numpy as np
 import torch
+from pathlib import Path
 from torch.utils.data import Dataset
 
-SAMPLE_BYTES = 107
+SAMPLE_BYTES = 108
 LABEL_SCALE = 3000.0  # tanh(score / scale) → [-1, 1]
 
 # piece index → one-hot position (0=empty, 1-3=own_s/m/l, 4-6=opp_s/m/l, 7=squid)
@@ -47,34 +49,36 @@ def encode_board(board: np.ndarray, player: int) -> np.ndarray:
 
 
 class PiranhaNNUEDataset(Dataset):
-    def __init__(self, path: str, max_score: int = 500_000):
-        with open(path, "rb") as f:
-            raw = f.read()
+    SAMPLE_DTYPE = np.dtype([
+        ("board",   "u1", 100),
+        ("player",  "u1"),
+        ("_pad",    "u1", 2),
+        ("score",   "<i4"),
+        ("outcome", "i1"),
+    ])
 
-        n_total = len(raw) // SAMPLE_BYTES
-        boards, players, labels = [], [], []
+    def __init__(self, paths, max_score: int = 500_000, wdl_lambda: float = 0.5):
+        raw = b"".join(p.read_bytes() for p in paths)
+        records = np.frombuffer(raw, dtype=self.SAMPLE_DTYPE)
+        n_total = len(records)
 
-        for i in range(n_total):
-            offset = i * SAMPLE_BYTES
-            board = np.frombuffer(raw[offset:offset + 100], dtype=np.uint8).copy()
-            player = raw[offset + 100]
-            score = struct.unpack_from("<i", raw, offset + 103)[0]
+        mask = np.abs(records["score"]) <= max_score
+        records = records[mask]
 
-            if abs(score) > max_score:
-                continue
+        feats = np.stack([
+            encode_board(b, p) for b, p in zip(records["board"], records["player"])
+        ])
 
-            feat = encode_board(board, player)
-            label = np.tanh(score / LABEL_SCALE)
+        eval_label    = np.tanh(records["score"].astype(np.float32) / LABEL_SCALE)
+        outcome_label = records["outcome"].astype(np.float32)
+        labels = wdl_lambda * outcome_label + (1.0 - wdl_lambda) * eval_label
 
-            boards.append(feat)
-            players.append(player)
-            labels.append(label)
+        self.X = torch.from_numpy(feats)
+        self.y = torch.from_numpy(labels)
+        print(f"Loaded {len(self.y):,} samples from {n_total:,} total "
+              f"(filtered {n_total - len(self.y):,} out-of-range, λ={wdl_lambda})")
 
-        self.X = torch.from_numpy(np.stack(boards))
-        self.y = torch.tensor(labels, dtype=torch.float32)
-        print(f"Loaded {len(self.y):,} samples from {n_total:,} total (filtered {n_total - len(self.y):,} terminal)")
-
-    def __len__(self) -> int:
+    def __len__(self):
         return len(self.y)
 
     def __getitem__(self, idx):

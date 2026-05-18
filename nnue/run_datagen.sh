@@ -64,5 +64,5 @@ cat "$SCRIPT_DIR/tmp_shards"/shard_*.bin >> "$OUT"
 rm -rf "$SCRIPT_DIR/tmp_shards"
 
 BYTES=$(wc -c < "$OUT")
-SAMPLES=$((BYTES / 107))
+SAMPLES=$((BYTES / 108))
 echo "Done. $SAMPLES samples total in $OUT ($(du -sh "$OUT" | cut -f1))"

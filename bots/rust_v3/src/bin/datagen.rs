@@ -2,12 +2,13 @@
 ///
 /// Plays self-play games from realistic randomized starting positions, searching
 /// each position for `time_ms` ms. Writes samples in the binary format consumed
-/// by nnue/training/dataset.py (107 bytes/sample):
+/// by nnue/training/dataset.py (108 bytes/sample):
 ///
 ///   board[100]: u8   piece at each square (0-7)
 ///   player[1]:  u8   side to move (1=ONE, 2=TWO)
 ///   turn[2]:    u16  LE
 ///   score[4]:   i32  LE (AB score from mover's POV)
+///   outcome[1]: i8   +1=mover wins, 0=draw, -1=mover loses
 ///
 /// Starting position mirrors real Piranhas 2026 rules:
 ///   ONE (red):  col 0 + col 9, rows 1-8 (16 fish, mixed sizes, symmetric)
@@ -17,7 +18,7 @@
 /// Usage:
 ///   cargo run --release --bin datagen -- <n_games> <time_ms> <out.bin>
 
-use piranhas_bot_v2::board::{Position, Undo, MoveList, SQUID};
+use piranhas_bot_v2::board::{Position, Undo, MoveList, SQUID, ONE, TWO};
 use piranhas_bot_v2::search::SearchEngine;
 use std::fs::OpenOptions;
 use std::io::{BufWriter, Write};
@@ -127,14 +128,41 @@ fn randomize_position(pos: &mut Position, n: usize, rng: &mut Rng) {
     }
 }
 
-// ─── Sample serialization ─────────────────────────────────────────────────────
+// ─── Sample types ─────────────────────────────────────────────────────────────
 
-fn write_sample(out: &mut impl Write, pos: &Position, score: i32) -> std::io::Result<()> {
-    out.write_all(&pos.board)?;
-    out.write_all(&[pos.player])?;
-    out.write_all(&pos.turn.to_le_bytes())?;
-    out.write_all(&score.to_le_bytes())?;
+struct PendingSample {
+    board: [u8; 100],
+    player: u8,
+    turn: u16,
+    score: i32,
+}
+
+fn write_sample(out: &mut impl Write, s: &PendingSample, outcome: i8) -> std::io::Result<()> {
+    out.write_all(&s.board)?;
+    out.write_all(&[s.player])?;
+    out.write_all(&s.turn.to_le_bytes())?;
+    out.write_all(&s.score.to_le_bytes())?;
+    out.write_all(&[outcome as u8])?;
     Ok(())
+}
+
+// ─── Winner determination ─────────────────────────────────────────────────────
+
+fn determine_winner(pos: &Position) -> Option<u8> {
+    let red_swarm  = pos.largest_component_value(ONE);
+    let blue_swarm = pos.largest_component_value(TWO);
+
+    if red_swarm > blue_swarm {
+        Some(ONE)
+    } else if blue_swarm > red_swarm {
+        Some(TWO)
+    } else {
+        match (pos.connected_since[0], pos.connected_since[1]) {
+            (Some(r), Some(b)) if r < b => Some(ONE),
+            (Some(r), Some(b)) if b < r => Some(TWO),
+            _ => None,
+        }
+    }
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -180,6 +208,8 @@ fn main() {
         let n_rand = 4 + rng.range(13) as usize;
         randomize_position(&mut pos, n_rand, &mut rng);
 
+        let mut pending: Vec<PendingSample> = Vec::new();
+
         loop {
             let mut ml = MoveList::new();
             pos.generate_moves_for(pos.player, &mut ml);
@@ -192,25 +222,30 @@ fn main() {
             if result.best_move.is_none() { break; }
 
             if score.abs() < skip_near_terminal {
-                write_sample(&mut out, &pos, score).expect("write failed");
-                total_samples += 1;
+                pending.push(PendingSample {
+                    board: pos.board,
+                    player: pos.player,
+                    turn: pos.turn,
+                    score,
+                });
             } else {
                 total_skipped += 1;
             }
 
             let mut undo = Undo::default();
             if !pos.make_move(result.best_move.unwrap(), &mut undo) { break; }
+        }
 
-            // 30% chance: opponent also plays randomly for extra diversity
-            if rng.range(10) < 3 {
-                let mut ml2 = MoveList::new();
-                pos.generate_moves_for(pos.player, &mut ml2);
-                if ml2.len > 1 {
-                    let idx = rng.range(ml2.len as u64) as usize;
-                    let mut undo2 = Undo::default();
-                    pos.make_move(ml2.moves[idx], &mut undo2);
-                }
-            }
+        // Determine winner and write all buffered samples with outcome label
+        let winner = determine_winner(&pos);
+        for s in &pending {
+            let outcome: i8 = match winner {
+                Some(p) if p == s.player =>  1,
+                Some(_)                  => -1,
+                None                     =>  0,
+            };
+            write_sample(&mut out, s, outcome).expect("write failed");
+            total_samples += 1;
         }
 
         if (game_idx + 1) % 50 == 0 || game_idx + 1 == n_games {

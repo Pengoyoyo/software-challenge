@@ -9,9 +9,9 @@ use crate::board::{
 static NNUE_BYTES: &[u8] = include_bytes!("weights.bin");
 
 #[cfg(has_nnue)]
-const NNUE_L1: usize = 64;
+const NNUE_L1: usize = 128;
 #[cfg(has_nnue)]
-const NNUE_L2: usize = 8;
+const NNUE_L2: usize = 16;
 #[cfg(has_nnue)]
 const NNUE_IN: usize = 800;
 

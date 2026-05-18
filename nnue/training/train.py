@@ -11,19 +11,26 @@ import math
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
+from pathlib import Path
 
 from dataset import PiranhaNNUEDataset
 from model import NNUE
 
+def search_folder(args):
+    folder = Path(args.data_folder)
+    bins: list[Path] = []
+    for file in folder.glob("*.bin"):
+        bins.append(file)
+    return bins
 
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
-    full_ds = PiranhaNNUEDataset(args.data)
+    full_ds = PiranhaNNUEDataset(search_folder(args), wdl_lambda=args.wdl_lambda)
 
     if args.val:
-        val_ds = PiranhaNNUEDataset(args.val)
+        val_ds = PiranhaNNUEDataset([Path(args.val)])
         train_ds = full_ds
     else:
         val_size = max(1, int(0.05 * len(full_ds)))
@@ -68,12 +75,13 @@ def train(args):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--data",   required=True)
-    p.add_argument("--val",    default=None)
-    p.add_argument("--epochs", type=int, default=20)
-    p.add_argument("--batch",  type=int, default=4096)
-    p.add_argument("--lr",     type=float, default=1e-3)
-    p.add_argument("--l1",     type=int, default=256)
-    p.add_argument("--l2",     type=int, default=32)
-    p.add_argument("--out",    default="model.pt")
+    p.add_argument("--data-folder", required=True)
+    p.add_argument("--val",        default=None)
+    p.add_argument("--epochs",     type=int,   default=20)
+    p.add_argument("--batch",      type=int,   default=4096)
+    p.add_argument("--lr",         type=float, default=1e-3)
+    p.add_argument("--l1",         type=int,   default=256)
+    p.add_argument("--l2",         type=int,   default=32)
+    p.add_argument("--wdl-lambda", type=float, default=0.5)
+    p.add_argument("--out",        default="model.pt")
     train(p.parse_args())
