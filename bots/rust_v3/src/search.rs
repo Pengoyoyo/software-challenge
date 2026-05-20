@@ -134,14 +134,17 @@ impl TimeManager {
         self.start.elapsed().as_nanos() as u64
     }
 
-    fn can_start_next_iter(&self, prev_iter_ns: u64, fail_events: i32, best_move_changes: i32) -> bool {
+    fn can_start_next_iter(&self, prev_iter_ns: u64, fail_events: i32, best_move_changes: i32, turn: u16) -> bool {
         let rem = self.remaining_ns();
         if rem <= 10_000_000 { return false; }
-        let mut safety = 12_000_000u64;
+        // Endgame (turn >= 40): branching narrows, sei aggressiver mit Zeitnutzung
+        let endgame = turn >= 40;
+        let mut safety = if endgame { 8_000_000u64 } else { 12_000_000u64 };
         safety += fail_events.max(0) as u64 * 2_000_000;
         safety += best_move_changes.max(0) as u64 * 2_000_000;
         let mut predicted = prev_iter_ns.max(25_000_000);
-        let growth = 1500i64
+        let base_growth = if endgame { 1250i64 } else { 1500i64 };
+        let growth = base_growth
             + (fail_events.max(0) as i64 * 80 + best_move_changes.max(0) as i64 * 60).min(500);
         predicted = (predicted as i64 * growth / 1000).max(15_000_000) as u64;
         rem > predicted + safety
@@ -277,7 +280,7 @@ impl SearchEngine {
         let mut depth_infos: Vec<DepthInfo> = Vec::new();
 
         'outer: for depth in 1i32..=64 {
-            if depth > 1 && !timer.can_start_next_iter(prev_iter_ns, recent_fail, recent_changes) {
+            if depth > 1 && !timer.can_start_next_iter(prev_iter_ns, recent_fail, recent_changes, pos.turn) {
                 break;
             }
             let iter_start_ns = timer.elapsed_ns();
@@ -625,8 +628,9 @@ impl SearchEngine {
                 actual_idx += 1;
                 continue;
             }
-            // Late Move Pruning
-            if !PV && quiet && depth <= 2 && actual_idx >= LMP_BASE + LMP_SCALE * depth as usize {
+            // Late Move Pruning — quadratisch, bis Tiefe 3
+            // depth 1→12, 2→24, 3→44
+            if !PV && quiet && depth <= 3 && actual_idx >= LMP_BASE + LMP_SCALE * (depth as usize).pow(2) {
                 break;
             }
 
@@ -760,9 +764,12 @@ impl SearchEngine {
         let mut caps = MoveList::new();
         pos.generate_captures(&mut caps);
         for mv in caps.as_slice() {
-            let cap_val = pos.fish_value[mv.to as usize] as i32;
+            // MVV-LVA: Most Valuable Victim, Least Valuable Attacker
+            let victim_val   = pos.fish_value[mv.to as usize] as i32;
+            let attacker_val = pos.fish_value[mv.from as usize] as i32;
             let swing = pos.local_connectivity_swing(*mv, player);
-            noisy[noisy_len] = (3_000_000 + cap_val * 120_000 + swing * 4_000 + t.center[mv.to as usize] as i32, *mv);
+            noisy[noisy_len] = (3_000_000 + victim_val * 200_000 - attacker_val * 10_000
+                                + swing * 4_000 + t.center[mv.to as usize] as i32, *mv);
             noisy_len += 1;
         }
 
