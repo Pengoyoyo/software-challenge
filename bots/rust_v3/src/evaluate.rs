@@ -9,11 +9,15 @@ use crate::board::{
 static NNUE_BYTES: &[u8] = include_bytes!("weights.bin");
 
 #[cfg(has_nnue)]
-const NNUE_L1: usize = 64;
+const NNUE_L1: usize = 128;
 #[cfg(has_nnue)]
-const NNUE_L2: usize = 8;
+const NNUE_L2: usize = 16;
 #[cfg(has_nnue)]
 const NNUE_IN: usize = 800;
+
+// Hybrid eval blend factor: α aus 100. NNUE_ALPHA=30 ⇒ α=0.30
+#[cfg(has_nnue)]
+const NNUE_ALPHA: i32 = 30;
 
 #[cfg(has_nnue)]
 struct NnueWeights {
@@ -431,7 +435,9 @@ pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32, use_nnue: bool
 
     #[cfg(has_nnue)]
     if use_nnue {
-        return run_nnue(&pos.board, perspective);
+        let nnue_s = run_nnue(&pos.board, perspective);
+        let hce_s  = hand_crafted_eval(pos, perspective, depth_hint);
+        return (NNUE_ALPHA * nnue_s + (100 - NNUE_ALPHA) * hce_s) / 100;
     }
 
     hand_crafted_eval(pos, perspective, depth_hint)
