@@ -17,9 +17,11 @@ from dataset import PiranhaNNUEDataset
 from model import NNUE
 
 def search_folder(args):
-    folder = Path(args.data_folder)
+    path = Path(args.data)
+    if path.is_file():
+        return [path]
     bins: list[Path] = []
-    for file in folder.glob("*.bin"):
+    for file in path.glob("*.bin"):
         bins.append(file)
     return bins
 
@@ -75,7 +77,7 @@ def train(args):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--data-folder", required=True)
+    p.add_argument("--data", required=True)
     p.add_argument("--val",        default=None)
     p.add_argument("--epochs",     type=int,   default=20)
     p.add_argument("--batch",      type=int,   default=4096)
