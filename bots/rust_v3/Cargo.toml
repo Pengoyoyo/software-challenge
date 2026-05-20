@@ -25,6 +25,10 @@ path = "benches/benchmark.rs"
 name = "datagen"
 path = "src/bin/datagen.rs"
 
+[[bin]]
+name = "eval_diag"
+path = "src/bin/eval_diag.rs"
+
 [dependencies]
 socha = { git = "https://github.com/simoncreates/socha.git" }
 log = "0.4"

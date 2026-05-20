@@ -15,9 +15,16 @@ const NNUE_L2: usize = 16;
 #[cfg(has_nnue)]
 const NNUE_IN: usize = 800;
 
-// Hybrid eval blend factor: α aus 100. NNUE_ALPHA=30 ⇒ α=0.30
+// Hybrid eval blend factor: α aus 100. NNUE_ALPHA=20 ⇒ α=0.20
 #[cfg(has_nnue)]
-const NNUE_ALPHA: i32 = 30;
+const NNUE_ALPHA: i32 = 20;
+
+// NNUE outputs are scaled by tanh×3000 → typical magnitude ~1500 cp.
+// HCE outputs typically reach ~3400 cp. To make α a true mix ratio, scale NNUE up.
+#[cfg(has_nnue)]
+const NNUE_BLEND_SCALE_NUM: i32 = 23;  // 23/10 = 2.3× → matches measured HCE magnitude
+#[cfg(has_nnue)]
+const NNUE_BLEND_SCALE_DEN: i32 = 10;
 
 #[cfg(has_nnue)]
 struct NnueWeights {
@@ -428,6 +435,14 @@ fn hand_crafted_eval(pos: &Position, perspective: u8, depth_hint: i32) -> i32 {
 
 // ─── Main evaluation ─────────────────────────────────────────────────────────
 
+/// DEBUG: returns (nnue_score, hce_score) — for diagnosing blend behavior.
+#[cfg(has_nnue)]
+pub fn debug_eval_split(pos: &Position, perspective: u8, depth_hint: i32) -> (i32, i32) {
+    let nnue_s = run_nnue(&pos.board, perspective);
+    let hce_s  = hand_crafted_eval(pos, perspective, depth_hint);
+    (nnue_s, hce_s)
+}
+
 pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32, use_nnue: bool) -> i32 {
     if let Some(s) = eval_terminals(pos, perspective) {
         return s;
@@ -437,7 +452,8 @@ pub fn evaluate(pos: &Position, perspective: u8, depth_hint: i32, use_nnue: bool
     if use_nnue {
         let nnue_s = run_nnue(&pos.board, perspective);
         let hce_s  = hand_crafted_eval(pos, perspective, depth_hint);
-        return (NNUE_ALPHA * nnue_s + (100 - NNUE_ALPHA) * hce_s) / 100;
+        let nnue_scaled = nnue_s * NNUE_BLEND_SCALE_NUM / NNUE_BLEND_SCALE_DEN;
+        return (NNUE_ALPHA * nnue_scaled + (100 - NNUE_ALPHA) * hce_s) / 100;
     }
 
     hand_crafted_eval(pos, perspective, depth_hint)
