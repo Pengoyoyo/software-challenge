@@ -30,7 +30,7 @@ if [ -f "$SCRIPT_DIR/training/.venv/bin/python" ]; then
 elif [ -f "$SCRIPT_DIR/.venv/bin/python" ]; then
     PYTHON="$SCRIPT_DIR/.venv/bin/python"
 fi
-"$PYTHON" "$SCRIPT_DIR/training/export.py" --model "$MODEL" --out "$WEIGHTS" --l1 128 --l2 16
+"$PYTHON" "$SCRIPT_DIR/training/export.py" --model "$MODEL" --out "$WEIGHTS" --l1 64 --l2 8
 
 # 2. Rebuild Rust binary
 echo ""
